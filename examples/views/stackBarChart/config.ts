@@ -86,7 +86,9 @@ tab3:`{
             label: "采装设备",
             value: [5, 4, 3, 2, 1],
             //自定义borderRadius
-            borderRadius:[10,10,0,0],
+            itemStyle: {
+                borderRadius:[10,10,0,0],
+            }
         },
         {
             label: "辅助设备",

@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { useTemplateRef } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 import ChartHeader from '../ChartHeader/ChartHeader.vue';
 import Echarts from '../Echarts/Echarts.vue';
 
-import remToPx from '../../utils/rem2px'
 import type { EChartsOption } from "echarts";
 import type { IYOption } from '../ChartHeader/ChartHeader.vue'
 
 export interface IExtendedYOption extends IYOption {
-    borderRadius?: number | number[];
     barWidth?: number;
     itemStyle?:  IObject<any>;
     tooltip?: IObject<any>;
@@ -90,10 +88,10 @@ const option = $computed(() => {
             ...props.tooltip
         },
         grid: {
-            left: remToPx(3),
-            top: remToPx(12),
-            right: remToPx(0),
-            bottom: remToPx(0),
+            left: 3,
+            top: 12,
+            right: 0,
+            bottom: 0,
             containLabel: true,
         },
         xAxis: {
@@ -109,8 +107,8 @@ const option = $computed(() => {
                 show:props.xAxisLabel,
                 margin: 0,
                 color: "#D2D2ED",
-                fontSize: remToPx(12),
-                lineHeight: remToPx(12),
+                fontSize: 12,
+                lineHeight: 12,
                 alignMaxLabel: "right",
                 alignMinLabel: "left",
             },
@@ -123,8 +121,8 @@ const option = $computed(() => {
             data: props.x,
             axisLabel: {
                 color: "#D2D2ED",
-                margin: remToPx(20),
-                fontSize: remToPx(12),
+                margin: 20,
+                fontSize: 12,
             },
             axisLine: {
                 show: false,
@@ -137,11 +135,11 @@ const option = $computed(() => {
             elements: [
                 {
                     type: 'text',
-                    bottom: remToPx(0),
+                    bottom:0,
                     z: 100,
                     style: {
                         text:props.units,
-                        fontSize: remToPx(12),
+                        fontSize: 12,
                         fill: "#D2D2ED",
                     }
                 }
@@ -153,44 +151,46 @@ const option = $computed(() => {
             name:item.label,
             data: item.data,
             color: props.colors[idx],
-            barWidth: item.barWidth !== undefined ? remToPx(item.barWidth) : remToPx(11),
+            barWidth: item.barWidth !== undefined ? item.barWidth : 12,
             itemStyle: {
                 ...item.itemStyle,
-                borderWidth: remToPx(2),
-                borderRadius: item.borderRadius !== undefined
-                ? Array.isArray(item.borderRadius)
-                    ? item.borderRadius.map(v => remToPx(v)) // 数组情况
-                    : remToPx(item.borderRadius)             // 单个数值情况
-                : remToPx(12)                                // 默认值
+                borderWidth: 2,
+                borderRadius: item.itemStyle?.borderRadius !== undefined
+                ? item.itemStyle?.borderRadius   : 12                              
             },
             tooltip: item.tooltip,
         })),
     } as EChartsOption
 });
+const $emit = defineEmits(['clickEffective', 'clickZr'])
+// 点击事件
+const clickEffective = (params: any) => {
+    $emit('clickEffective', params)
+}
+const clickZr = (params: any) => {
+    $emit('clickZr', params)
+}
 
+defineExpose({
+    chart: computed(() => chart.value?.chart || null)
+})
 
 </script>
 
 <template>
-    <div class="EaconComponents EaconComponentsBarChart">
+    <div class="EaconComponents EaconComponentsHorizontalStackBarChart">
         <chartHeader :title :y :chart="chartInstance" :colors></chartHeader>
-        <Echarts class="EaconComponentsBarChartComponent" ref="chartComponent" :option></Echarts>
+        <Echarts class="EaconComponentsHorizontalStackBarChartComponent" id="HorizontalStackBarChart" ref="chartComponent" :option  @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
     </div>
 </template>
 
 <style lang="scss" scoped>
-.EaconComponentsBarChart {
+.EaconComponentsHorizontalStackBarChart {
     height: 100%;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    .EaconComponentsBarChartUnit{
-        display: flex;
-        justify-content: space-between;
-        color: #D2D2ED;
-        font-size: .75rem;
-    }
-    .EaconComponentsBarChartComponent {
+    .EaconComponentsHorizontalStackBarChartComponent {
         height: 1%;
         flex: 1 1 auto;
     }

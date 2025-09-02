@@ -7,10 +7,8 @@ import type { EChartsOption } from "echarts";
 import type { IYOption } from '../ChartHeader/ChartHeader.vue'
 
 export interface IExtendedYOption extends IYOption {
-    barWidth?: number;
-    barMinWidth?:number;
-    itemStyle?:  IObject<any>;
-    tooltip?: IObject<any>;
+    lineStyle?:  IObject<any>;
+    areaStyle?:  IObject<any>;
 }
 
 interface IProps {
@@ -29,7 +27,9 @@ interface IProps {
     //是否双y轴
     doubleY?: boolean,
     //X轴标签样式
-    XAxisLabel?:IObject<any>;
+    XAxisLabel?:IObject<any>,
+    //是否有间隔
+    boundaryGap?: boolean
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -37,12 +37,17 @@ const props = withDefaults(defineProps<IProps>(), {
     y: () => [],
     colors: () => [],
     doubleY: false,
+    boundaryGap:true
 })
-
+const headerY = $computed(() => { 
+    return props.y.map(item =>({
+        ...item,
+        itemType: 'line' as const
+    }))
+})
 
 const chart = useTemplateRef<any>('chartComponent')
 const chartInstance = $computed(() => chart.value?.chart)
-
 
 const option = $computed(() => {
     //基础y轴
@@ -73,20 +78,19 @@ const option = $computed(() => {
     //计算显示数据
     const series = props.y?.map((item, idx) => {
         return {
-            type: "bar",
+            type: "line",
+            smooth: true,
+            symbol:'none',
             name: item.label,
             data: item.value,
             color: props.colors[idx],
             yAxisIndex: props.doubleY ? idx : undefined,
-            barWidth: item.barWidth === null ? null : (item.barWidth !== undefined ?item.barWidth : 12),
-            barMaxWidth: item.barMinWidth, 
             barMinHeight: 4,
-            itemStyle: {
-                ...item.itemStyle,
-                borderWidth: 2,
-                borderRadius: item.itemStyle?.borderRadius !== undefined
-                ? item.itemStyle?.borderRadius   : 12                              
+            lineStyle: {
+                width: 3,
+                ...item.lineStyle,
             },
+            areaStyle: item.areaStyle,
             ...item
         }
     })
@@ -121,6 +125,8 @@ const option = $computed(() => {
         },
         xAxis: {
             data: props.x,
+            type: 'category',
+            boundaryGap: props.boundaryGap,
             splitLine: {
                 show: false,
             },
@@ -131,7 +137,6 @@ const option = $computed(() => {
                 color: "#D2D2ED",
                 fontSize: 12,
                 lineHeight: 12,
-                ...props.XAxisLabel
             },
             axisTick: {
                 show: false
@@ -158,30 +163,30 @@ defineExpose({
 </script>
 
 <template>
-    <div class="EaconComponents EaconComponentsBarChart">
-        <chartHeader :title :y :chart="chartInstance" :colors></chartHeader>
-        <div class="EaconComponentsBarChartUnit">
-            <div v-for="item in units" class="EaconComponentsBarChartUnitItem">
+    <div class="EaconComponents EaconComponentsLineChart">
+        <chartHeader :title :y="headerY" :chart="chartInstance" :colors></chartHeader>
+        <div class="EaconComponentsLineChartUnit">
+            <div v-for="item in units" class="EaconComponentsLineChartUnitItem">
                 {{item}}
             </div>
         </div>
-        <Echarts class="EaconComponentsBarChartComponent" id="BarChart" ref="chartComponent" :option @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
+        <Echarts class="EaconComponentsLineChartComponent" id="LineChart" ref="chartComponent" :option @clickEffective="clickEffective" @clickZr="clickZr" :bound="boundaryGap"></Echarts>
     </div>
 </template>
 
 <style lang="scss" scoped>
-.EaconComponentsBarChart {
+.EaconComponentsLineChart {
     height: 100%;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    .EaconComponentsBarChartUnit{
+    .EaconComponentsLineChartUnit{
         display: flex;
         justify-content: space-between;
         color: #D2D2ED;
         font-size: 1rem;
     }
-    .EaconComponentsBarChartComponent {
+    .EaconComponentsLineChartComponent {
         height: 1%;
         flex: 1 1 auto;
     }

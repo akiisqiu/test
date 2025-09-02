@@ -34,17 +34,21 @@ const option = $computed(() => {
 })
 
 //上方数据
+let tab1Data= new Function( `return ${rawOptionStr['tab1']}`)()
+const leftTitle = $computed(()=>{
+    return tab1Data.y[0].label
+})
+const rightTitle = $computed(()=>{
+    return tab1Data.y[1].label
+})
 const leftValue = $computed(()=>{
-    let data= new Function( `return ${rawOptionStr['tab1']}`)()
-    return data.y[0].value.reduce((a: number, b: number) => a + b, 0)
+    return tab1Data.y[0].value.reduce((a: number, b: number) => a + b, 0)
 })
 const rightValue = $computed(()=>{
-    let data= new Function( `return ${rawOptionStr['tab1']}`)()
-    return data.y[1].value.reduce((a: number, b: number) => a + b, 0)
+    return tab1Data.y[1].value.reduce((a: number, b: number) => a + b, 0)
 })
 const topColors = $computed(()=>{
-    let data= new Function( `return ${rawOptionStr['tab1']}`)()
-    return data.colors
+    return tab1Data.colors
 })
 </script>
 
@@ -53,7 +57,9 @@ const topColors = $computed(()=>{
         <EaPageTabs :options="tabs" v-model="formValue.tab"></EaPageTabs>
         <div class="BarContent">
             <div class="preview">
-                <EaHorizontalComparisonChart v-show="formValue.tab.value === 'tab1'" :leftValue :rightValue :colors="topColors"> </EaHorizontalComparisonChart>
+                <EaComparisonTips  v-show="formValue.tab.value === 'tab1'" :leftValue :rightValue :leftTitle :rightTitle :colors="topColors">
+                    <EaHorizontalComparisonChart :leftValue :rightValue :colors="topColors"> </EaHorizontalComparisonChart>
+                </EaComparisonTips>
                 <EaStackBarChart v-bind="option"></EaStackBarChart>
             </div>
             <div class="options">
@@ -78,10 +84,18 @@ const topColors = $computed(()=>{
         flex: 1 1 auto;
         height: 1%;
         gap: 20px;
-        &>div {
+        .preview,.options{
             width: 1%;
             flex: 1 1 auto;
             height: 100%;
+        }
+        .preview{
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            .EaconComponentsStackBarChart{
+                flex: 1 1 auto;
+            }
         }
     }
 }

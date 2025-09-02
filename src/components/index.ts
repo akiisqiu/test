@@ -6,6 +6,8 @@ import LoopHorizontalBarChart from './HorizontalBarChart/LoopHorizontalBarChart.
 import StackBarChart from './StackBarChart/StackBarChart.vue'
 import HorizontalStackBarChart from './HorizontalStackBarChart/HorizontalStackBarChart.vue'
 import HorizontalComparisonChart from './HorizontalComparisonChart/HorizontalComparisonChart.vue'
+import ComparisonTips from './ComparisonTips/ComparisonTips.vue'
+import LineChart from './LineChart/LineChart.vue'
 
 export {
     Echarts,
@@ -15,5 +17,7 @@ export {
     LoopHorizontalBarChart,
     StackBarChart,
     HorizontalStackBarChart,
-    HorizontalComparisonChart
+    HorizontalComparisonChart,
+    ComparisonTips,
+    LineChart
 }

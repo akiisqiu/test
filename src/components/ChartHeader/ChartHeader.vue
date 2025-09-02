@@ -1,5 +1,5 @@
 <template>
-    <div ref="chartHeaderDom" class="EaconComponents EaconComponentsChartHeader">
+    <div ref="chartHeaderDom" class="EaconComponents EaconComponentsChartHeader chartHeader">
         <div class="chartTitle">
             {{ title }}
         </div>
@@ -7,17 +7,23 @@
             <template #reference>
                 <div class="chartLegendContainer">
                     <div ref="chartLegendDom" class="chartLegend chartLegendHidden" :class="{ showMore }">
-                        <div class="chartLegendItem" v-for="(item, idx) in y" :key="idx" :class="{ hidden: hidden.has(item.label), opacity: idx > showY }" @click="handleChangeLegend(item)">
-                            <div class="chartLegendItemMark" :class="item.itemType" :style="{ background: colors[idx], borderColor: colors[idx] }"></div>
+                        <div class="chartLegendItem" v-for="(item, idx) in y" :key="idx" :class="{ hidden: hidden.has(item.label), opacity: idx >= showY }" @click="handleChangeLegend(item)">
+                            <div v-if="!item.itemType || item.itemType === 'bar'" class="chartLegendItemMark" :class="item.itemType" :style="{ background: colors[idx], borderColor: colors[idx] }"></div>
+                            <div v-else-if="item.itemType === 'line'" class="chartLegendItemMark" :class="item.itemType" :style="{ color: colors[idx] }">
+                                <EaIcon type="icon-zhexiantuli"></EaIcon>
+                            </div>
                             {{ item.label }}
                         </div>
                     </div>
                     <EaIcon v-show="showMore" class="chartLegendMore" type="icon-more"></EaIcon>
                 </div>
             </template>
-            <div class="chartLegend">
+            <div class="chartLegend" :style="{ 'grid-template-columns': `repeat(${columns}, 1fr)` }">
                 <div class="chartLegendItem" v-for="(item, idx) in y" :key="idx" :class="{ hidden: hidden.has(item.label) }" @click="handleChangeLegend(item)">
-                    <div class="chartLegendItemMark" :class="item.itemType" :style="{ background: colors[idx], borderColor: colors[idx] }"></div>
+                    <div v-if="!item.itemType || item.itemType === 'bar'" class="chartLegendItemMark" :class="item.itemType" :style="{ background: colors[idx], borderColor: colors[idx] }"></div>
+                    <div v-else-if="item.itemType === 'line'" class="chartLegendItemMark" :class="item.itemType" :style="{ color: colors[idx] }">
+                        <EaIcon type="icon-zhexiantuli"></EaIcon>
+                    </div>
                     <div class="chartLegendItemLabel">{{ item.label }}</div>
                 </div>
             </div>
@@ -29,6 +35,7 @@
 import { useTemplateRef, nextTick, onBeforeUnmount, watch } from 'vue'
 import { ElPopover } from "element-plus";
 import type { ECharts } from "echarts";
+import { getTextWidth } from 'eacon-components' 
 
 export interface IYOption {
     itemType?: 'bar' | 'line'
@@ -50,6 +57,7 @@ const chartLegend = useTemplateRef("chartLegendDom")
 let width = $ref<number | string>(0)
 let showMore = $ref(false)
 let showY = $ref(props.y.length)
+let columns = $ref(1)
 
 const hidden = $ref(new Set())
 const handleChangeLegend = (item: IYOption) => {
@@ -60,31 +68,75 @@ const handleChangeLegend = (item: IYOption) => {
         name: key
     });
 }
+const computedTooltip = () => {
+    width = Math.ceil(chartHeader.value?.getBoundingClientRect().width ?? 0 * 0.65)
+    const htmlElement = document.querySelector('html');
+    const fz = htmlElement ? parseFloat(htmlElement.style.fontSize || '16') : 16;
+    const textWidths = props.y.map(item => getTextWidth(item.label, '1rem'))
+    const maxWidth = Math.ceil(Math.max(...textWidths)) + 1 + 1.06 * fz
+    const gap = .4 * fz
+    const itemWidthWithGap = maxWidth + gap
+    const enough = (width % itemWidthWithGap) > maxWidth
+    columns = ~~(width / itemWidthWithGap) + Number(enough)
+}
 
+const computedContent = () => {
+    const htmlElement = document.querySelector('html');
+    const fz = htmlElement ? parseFloat(htmlElement.style.fontSize || '16') : 16;
+
+    const dom = chartLegend?.value
+    const domWidth = ~~(dom.offsetWidth)
+    const children = [...(dom.children ?? [])]
+    const childrenWidths = children.map((i) => i.offsetWidth)
+    const allChildrenWidth = childrenWidths.reduce((l, i) => l + i, 0)
+
+    showMore = allChildrenWidth > domWidth
+    showY = 1000
+
+    if (!showMore) return
+
+    nextTick(() => {
+        const dom = chartLegend?.value
+        const domWidth = ~~(dom.offsetWidth)
+        let n = 0
+        showY = childrenWidths.findIndex((item, idx) => {
+            n += item
+            return  n  - fz * .8 > domWidth
+        })
+    })
+
+}
 const resize = (again: boolean = true) => {
     nextTick(() => {
-        width = chartHeader.value?.getBoundingClientRect().width || 'auto'
         if (!chartLegend?.value) {
             // 产量分析使用场景异常，临时递归调用解决
             setTimeout(resize, 200)
             return
-
         }
-        const dom = chartLegend?.value
-        const domWidth = chartLegend.value.scrollWidth
-        let childrenWidth = 0
-        const arr = [...(dom.children ?? [])] as HTMLDivElement[]
-        arr.forEach((item, idx) => {
-            childrenWidth += item.offsetWidth ?? 0
-            if (childrenWidth < domWidth) {
-                showY = idx
-            }
-        })
-        showMore = domWidth < childrenWidth
+        computedTooltip()
+        computedContent()
+        // width = chartHeader.value?.getBoundingClientRect().width || 'auto'
+        // if (!chartLegend?.value) {
+        //     // 产量分析使用场景异常，临时递归调用解决
+        //     setTimeout(resize, 200)
+        //     return
 
-        if (again && !showMore) {
-            resize(false)
-        }
+        // }
+        // const dom = chartLegend?.value
+        // const domWidth = chartLegend.value.scrollWidth
+        // let childrenWidth = 0
+        // const arr = [...(dom.children ?? [])] as HTMLDivElement[]
+        // arr.forEach((item, idx) => {
+        //     childrenWidth += item.offsetWidth ?? 0
+        //     if (childrenWidth < domWidth) {
+        //         showY = idx
+        //     }
+        // })
+        // showMore = domWidth < childrenWidth
+
+        // if (again && !showMore) {
+        //     resize(false)
+        // }
     })
 }
 resize()
@@ -102,6 +154,12 @@ onBeforeUnmount(() => window.removeEventListener('resize', bindResize))
     backdrop-filter: blur(1.3rem);
     background: linear-gradient(151deg, #000000 0%, rgba(0, 0, 0, 0.58) 100%) !important;
     border: 0.06rem solid rgba(0, 0, 0, 0.29) !important;
+    padding: 1rem;
+    border-radius: .5rem;
+    box-sizing: content-box;
+    .chartLegend {
+        display: grid;
+    }
     .el-popper__arrow{
         display: none;
     }
@@ -110,7 +168,6 @@ onBeforeUnmount(() => window.removeEventListener('resize', bindResize))
 
 <style lang="scss" scoped>
 .EaconComponentsChartHeader {
-    width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -118,11 +175,11 @@ onBeforeUnmount(() => window.removeEventListener('resize', bindResize))
 
     .chartTitle {
         flex: 0 0 auto;
-        font-size: 1rem;
+        font-size: 1.125rem;
     }
 
     .chartLegendHidden {
-        overflow: scroll;
+        overflow: hidden;
         flex-wrap: nowrap;
         justify-content: flex-end;
 
@@ -176,9 +233,17 @@ onBeforeUnmount(() => window.removeEventListener('resize', bindResize))
         flex: 0 0 auto;
         padding-right: .8rem;
 
+        &:last-child {
+            padding: 0;
+        }
+
         &.hidden {
             .chartLegendItemMark {
                 background: none !important;
+
+                &.line {
+                    opacity: .3;
+                }
             }
         }
 
@@ -192,9 +257,16 @@ onBeforeUnmount(() => window.removeEventListener('resize', bindResize))
             border-radius: .13rem;
             border: .1rem solid transparent;
             transition: .2s;
+            flex: 0 0 auto;
 
             &.line {
-                border-radius: 50% !important;
+                border: none;
+                margin-right: 2px;
+
+                .iconfont {
+                    font-size: 1rem;
+                    margin-top: -0.1rem;
+                }
             }
         }
 
@@ -202,6 +274,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', bindResize))
             line-height: .66rem;
             margin-top: .1rem;
             font-size: 1rem;
+            word-break: keep-all;
         }
     }
 }

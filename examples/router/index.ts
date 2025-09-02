@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import layouts from '@/layouts/layouts.vue'
 
 import bar from './modules/bar.ts'
+import line from './modules/line.ts'
 
 export const routes = [
   {
@@ -46,7 +47,8 @@ export const routes = [
       }
     ]
   },
-  bar
+  bar,
+  line
 ]
 
 const router = createRouter({

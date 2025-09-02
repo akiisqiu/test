@@ -5,8 +5,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, useTemplateRef } from 'vue'
+import { onMounted, onUnmounted, useTemplateRef, watch } from 'vue'
 import * as monaco from 'monaco-editor'
+import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
+
 
 // 编辑器配置类型
 interface EditorOptions extends monaco.editor.IStandaloneEditorConstructionOptions {
@@ -18,6 +20,13 @@ interface IProps {
     option?: EditorOptions
 }
 
+// 解决vite Monaco提示错误
+// json格式语法校验
+// self.MonacoEnvironment = {
+//     getWorker() {
+//         return new tsWorker();
+//     },
+// };
 const props = withDefaults(defineProps<IProps>(), {
     option: () => ({
         value: '',
@@ -42,7 +51,8 @@ onMounted(() => {
             editorRef.value,
             {
                 ...props.option,
-                value: value.value
+                value: value.value,
+                theme: "vs-white",
             }
         )
 
@@ -52,6 +62,11 @@ onMounted(() => {
     }
 })
 
+watch(value, (newValue) => {
+    if (!editor) return;
+    newValue !== editor.getValue() && editor.setValue(newValue ?? "");
+
+});
 onUnmounted(() => {
     editor?.dispose?.()
 })

@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { useTemplateRef } from 'vue';
+import { computed, useTemplateRef } from 'vue';
 import ChartHeader from '../ChartHeader/ChartHeader.vue';
 import Echarts from '../Echarts/Echarts.vue';
 
-import remToPx from '../../utils/rem2px'
 import type { EChartsOption } from "echarts";
 import type { IYOption } from '../ChartHeader/ChartHeader.vue'
 
 export interface IExtendedYOption extends IYOption {
-    borderRadius?: number | number[];
     barWidth?: number;
-    itemStyle?:  IObject<any>;
+    itemStyle?: IObject<any>;
     tooltip?: IObject<any>;
 }
 
@@ -19,9 +17,10 @@ interface IProps {
     colors?: string[]
     x: string[],
     y: IExtendedYOption[],
-    units?:string[],
+    units?: string[],
     tooltip?: IObject,
-    percentage?: boolean
+    percentage?: boolean,
+    anotherData?: IObject,
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -36,7 +35,7 @@ const chartInstance = $computed(() => chart.value?.chart)
 //堆叠数据计算
 const stackYData = $computed(() => {
     //计算总和
-    const totals =  props.y.length > 0 
+    const totals = props.y.length > 0
         ? props.y[0].value.map((_, index) => {
             // 累加
             return props.y.reduce((sum, yItem) => {
@@ -44,21 +43,21 @@ const stackYData = $computed(() => {
             }, 0);
         })
         : [];
-    const stackData = props.y.map((item,idx) => {
-        const itemStackData = item.value.map((value,vIdx) => { 
+    const stackData = props.y.map((item, idx) => {
+        const itemStackData = item.value.map((value, vIdx) => {
             // 百分比
-            if(props.percentage){
+            if (props.percentage) {
                 const total = totals[vIdx]
 
                 const percent = total > 0 ? (value / total) * 100 : 0
                 return percent.toFixed(2)
-            }else{//正常堆叠
+            } else {//正常堆叠
                 return value
             }
         })
         return {
             ...item,
-            data:itemStackData
+            data: itemStackData
         }
     })
     return stackData
@@ -87,10 +86,10 @@ const option = $computed(() => {
             ...props.tooltip
         },
         grid: {
-            left: remToPx(3),
-            top: remToPx(12),
-            right: remToPx(0),
-            bottom: remToPx(0),
+            left: 3,
+            top: 12,
+            right: 0,
+            bottom: 0,
             containLabel: true,
         },
         xAxis: {
@@ -103,8 +102,8 @@ const option = $computed(() => {
             },
             axisLabel: {
                 color: "#D2D2ED",
-                fontSize: remToPx(12),
-                lineHeight: remToPx(12),
+                fontSize: 12,
+                lineHeight: 12,
             },
             axisTick: {
                 show: false
@@ -114,7 +113,7 @@ const option = $computed(() => {
             type: 'value',
             axisLabel: {
                 color: "#D2D2ED",
-                fontSize: remToPx(12),
+                fontSize: 12,
             },
             splitLine: {
                 lineStyle: {
@@ -126,29 +125,37 @@ const option = $computed(() => {
             axisTick: {
                 show: false
             },
-            max:props.percentage ? 100 : undefined,
+            max: props.percentage ? 100 : undefined,
         },
-        series: stackYData.map((item,idx)=>({
+        series: stackYData.map((item, idx) => ({
             type: 'bar',
             stack: 'total',
-            name:item.label,
+            name: item.label,
             data: item.data,
             color: props.colors[idx],
-            barWidth: item.barWidth !== undefined ? remToPx(item.barWidth) : remToPx(11),
+            barWidth: item.barWidth !== undefined ? item.barWidth : 12,
             itemStyle: {
                 ...item.itemStyle,
-                borderWidth: remToPx(2),
-                borderRadius: item.borderRadius !== undefined
-                ? Array.isArray(item.borderRadius)
-                    ? item.borderRadius.map(v => remToPx(v)) // 数组情况
-                    : remToPx(item.borderRadius)             // 单个数值情况
-                : remToPx(12)                                // 默认值
+                borderWidth: 2,
+                borderRadius: item.itemStyle?.borderRadius !== undefined
+                    ? item.itemStyle?.borderRadius : 12
             },
             tooltip: item.tooltip,
         })),
     } as EChartsOption
 });
+const $emit = defineEmits(['clickEffective', 'clickZr'])
+// 点击事件
+const clickEffective = (params: any) => {
+    $emit('clickEffective', params)
+}
+const clickZr = (params: any) => {
+    $emit('clickZr', params)
+}
 
+defineExpose({
+    chart: computed(() => chart.value?.chart || null)
+})
 </script>
 
 <template>
@@ -156,10 +163,11 @@ const option = $computed(() => {
         <chartHeader :title :y :chart="chartInstance" :colors></chartHeader>
         <div class="EaconComponentsStackBarChartUnit">
             <div v-for="item in units" class="EaconComponentsStackBarChartUnitItem">
-                {{item}}
+                {{ item }}
             </div>
         </div>
-        <Echarts class="EaconComponentsBarChartComponent" ref="chartComponent" :option></Echarts>
+        <Echarts class="EaconComponentsStackBarChartComponent" id="StackBarChart" ref="chartComponent" :option
+            @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
     </div>
 </template>
 
@@ -169,13 +177,15 @@ const option = $computed(() => {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    .EaconComponentsStackBarChartUnit{
+
+    .EaconComponentsStackBarChartUnit {
         display: flex;
         justify-content: space-between;
         color: #D2D2ED;
         font-size: .75rem;
     }
-    .EaconComponentsBarChartComponent {
+
+    .EaconComponentsStackBarChartComponent {
         height: 1%;
         flex: 1 1 auto;
     }

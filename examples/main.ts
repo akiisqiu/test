@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router/index.ts'
 import eacon from '../src/index.ts'
+import '../src/utils/rem2px.ts';
 
 import eaconComponent from 'eacon-components'
 import 'eacon-components/index.css'

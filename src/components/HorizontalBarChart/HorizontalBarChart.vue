@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { computed, useTemplateRef } from 'vue';
 import * as echarts from "echarts";
 import Echarts from '../Echarts/Echarts.vue';
 
-import remToPx from '../../utils/rem2px'
 import type { EChartsOption } from "echarts";
 
 interface IProps {
@@ -18,6 +18,7 @@ const props = withDefaults(defineProps<IProps>(), {
     x: () => [],
     y: () => [],
 })
+const chart = useTemplateRef<any>('chartComponent')
 
 
 const option = $computed(() => {
@@ -44,10 +45,10 @@ const option = $computed(() => {
             ...props.tooltip
         },
         grid: {
-            left: remToPx(3),
-            top: remToPx(12),
-            right: remToPx(0),
-            bottom: remToPx(0),
+            left: 3,
+            top: 12,
+            right: 0,
+            bottom: 0,
             containLabel: true,
         },
         xAxis: {
@@ -61,7 +62,7 @@ const option = $computed(() => {
             axisLabel: {
                 show:false,
                 color: "#D2D2ED",
-                fontSize: remToPx(12),
+                fontSize: 12,
                 alignMaxLabel: "right",
                 alignMinLabel: "left",
             },
@@ -78,21 +79,21 @@ const option = $computed(() => {
             axisLabel: {
                 color: "#D2D2ED",
                 interval: 0,
-                fontSize: remToPx(12),
+                fontSize: 12,
             },
             inverse: true
         },
         series: [
             {
                 type: "bar",
-                barWidth: remToPx(6),
+                barWidth: 6,
                 showBackground: true,
                 backgroundStyle: {
                     color: "rgba(255, 255, 255, 0.1)",
-                    borderRadius: remToPx(3),
+                    borderRadius: 3,
                 },
                 itemStyle: {
-                    borderRadius: remToPx(3),
+                    borderRadius: 3,
                     color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
                         { offset: 0, color: "rgba(157, 245, 226, 1)" },
                         { offset: 0.5, color: "rgba(112, 168, 245, 1)" },
@@ -104,8 +105,18 @@ const option = $computed(() => {
         ],
     } as EChartsOption
 });
+const $emit = defineEmits(['clickEffective', 'clickZr'])
+// 点击事件
+const clickEffective = (params: any) => {
+    $emit('clickEffective', params)
+}
+const clickZr = (params: any) => {
+    $emit('clickZr', params)
+}
 
-
+defineExpose({
+    chart: computed(() => chart.value?.chart || null)
+})
 </script>
 
 <template>
@@ -114,7 +125,7 @@ const option = $computed(() => {
             <div class="EaconComponentsHorizontalBarChartTitle">{{ props.title }}</div>
             <div class="EaconComponentsHorizontalBarChartUnits">{{ props.units }}</div>
         </div>
-        <Echarts class="EaconComponentsHorizontalBarChartComponent" ref="chartComponent" :option></Echarts>
+        <Echarts class="EaconComponentsHorizontalBarChartComponent"  id="HorizontalBarChart" ref="chartComponent" :option  @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
     </div>
 </template>
 

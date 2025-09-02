@@ -48,5 +48,13 @@ export default {
                 title: '柱状图-堆叠(横)'
             }
         },
+        {
+            path: '/spFuncStackBarChart',
+            name: 'spFuncStackBarChart',
+            component: () => import('@/views/spFuncStackBarChart/spFuncStackBarChart.vue'),
+            meta: {
+                title: '柱状图-点击功能示例'
+            }
+        },
     ]
 }

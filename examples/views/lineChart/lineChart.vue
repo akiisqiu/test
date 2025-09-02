@@ -32,9 +32,9 @@ watch(() => formValue.value, (nVal, oVal) => {
 <template>
     <div class="echarts">
         <EaPageTabs :options="tabOptions" v-model="formValue"></EaPageTabs>
-        <div class="BarContent">
+        <div class="LineContent">
             <div class="preview">
-                <EaBarChart v-bind="chartOption"></EaBarChart>
+                <EaLineChart v-bind="chartOption"></EaLineChart>
             </div>
             <div class="options">
                 <Monaco v-model="formValue.value"></Monaco>
@@ -52,7 +52,7 @@ watch(() => formValue.value, (nVal, oVal) => {
         width: 100%;
         border-bottom: var(--ea-border);
     }
-    .BarContent{
+    .LineContent{
         padding-top: 20px;
         display: flex;
         flex: 1 1 auto;
