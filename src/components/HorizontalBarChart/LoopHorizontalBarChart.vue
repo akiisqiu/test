@@ -8,15 +8,19 @@ import 'swiper/css';
 import 'swiper/css/autoplay';
 import 'swiper/css/mousewheel';
 import 'swiper/css/free-mode';
-import { lookup } from 'dns';
 
 interface LoopChartProps {
+    // 标题
     title?: string,
-    units?: string,
-    x:string[],
-    y:number[],
+    //数据
+    y: string[],
+    // y轴数据
+    x: number[],
+    //单位
+    units?:string,
+    //配置项
     option?:IObject,
-    unit?:string,
+    //字体大小
     fontSize?:string,
 }
 
@@ -30,7 +34,7 @@ const swiperOptions = $computed(() => ({
     modules: [Autoplay, FreeMode, Mousewheel],
     //设置slider容器能够同时显示的slides数量number or auto
     "slides-per-view": 6,
-    loop: props.x.length > 6,
+    loop: props.y.length > 6,
     direction: 'vertical',
     freeMode: {
         enable: false,
@@ -56,7 +60,7 @@ const swiperOptions = $computed(() => ({
 
 let isInit = $ref(false)
 
-watch(() => props.y, () => {
+watch(() => props.x, () => {
     isInit = false
     nextTick(() => {
         isInit = true
@@ -69,16 +73,16 @@ let i = $ref(0)
 const getWidth = (arr) => {
     let max = 0
     i;
-    arr.forEach((label) => {
-        const item = getTextWidth(label, props.fontSize) + getTextWidth(props.unit, props.fontSize)
+    arr.forEach((name) => {
+        const item = getTextWidth(name, props.fontSize) + getTextWidth(props.unit, props.fontSize)
         max = Math.max(max, item)
     })
     return max + 'px'
 }
-let maxXLength = $computed(() => getWidth(props.x))
 let maxYLength = $computed(() => getWidth(props.y))
+let maxXLength = $computed(() => getWidth(props.x))
 
-const maxValue = $computed(() => Math.max(...(props.y)))
+const maxValue = $computed(() => Math.max(...(props.x)))
 
 const resize = () => i++
 window.addEventListener('resize', resize)
@@ -124,17 +128,17 @@ const clickY = (item:String) => {
         <div class="EaconComponentsLoopHorizontalBarChartContent" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
             <Swiper v-if="isInit" v-bind="swiperOptions"
                 @swiper="onSwiper" @slideChange="onChange">
-                <SwiperSlide v-for="(label, idx) in x" :key="idx">
-                    <div class="EaconComponentsLoopHorizontalBarChartBar" @click="clickY(label)">
+                <SwiperSlide v-for="(name, idx) in y" :key="idx">
+                    <div class="EaconComponentsLoopHorizontalBarChartBar" @click="clickY(name)">
                         <div
-                        class="EaconComponentsLoopHorizontalBarChartLabel" :style="{ width: maxXLength }">
-                            {{ label }}
+                        class="EaconComponentsLoopHorizontalBarChartLabel" :style="{ width: maxYLength }">
+                            {{ name }}
                         </div>
                         <div class="EaconComponentsLoopHorizontalBarChartBarContent">
-                            <div class="EaconComponentsLoopHorizontalBarChartInner" :style="{ width: !maxValue ? 0 : `${y[idx] / maxValue * 100}%` }"></div>
+                            <div class="EaconComponentsLoopHorizontalBarChartInner" :style="{ width: !maxValue ? 0 : `${x[idx] / maxValue * 100}%` }"></div>
                         </div>
-                        <div class="EaconComponentsLoopHorizontalBarChartBarValue"  :style="{ width: maxYLength }">
-                            {{ y[idx] }}{{ unit }}
+                        <div class="EaconComponentsLoopHorizontalBarChartBarValue"  :style="{ width: maxXLength }">
+                            {{ x[idx] }}{{ unit }}
                         </div>
                     </div>
                 </SwiperSlide>

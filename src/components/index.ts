@@ -8,6 +8,8 @@ import HorizontalStackBarChart from './HorizontalStackBarChart/HorizontalStackBa
 import HorizontalComparisonChart from './HorizontalComparisonChart/HorizontalComparisonChart.vue'
 import ComparisonTips from './ComparisonTips/ComparisonTips.vue'
 import LineChart from './LineChart/LineChart.vue'
+import LargeScaleLineChart from './LargeScaleLineChart/LargeScaleLineChart.vue'
+import MixLineBarChart from './MixLineBarChart/MixLineBarChart.vue'
 
 export {
     Echarts,
@@ -19,5 +21,7 @@ export {
     HorizontalStackBarChart,
     HorizontalComparisonChart,
     ComparisonTips,
-    LineChart
+    LineChart,
+    LargeScaleLineChart,
+    MixLineBarChart
 }

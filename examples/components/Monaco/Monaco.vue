@@ -5,10 +5,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, useTemplateRef, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, useTemplateRef, watch } from 'vue'
 import * as monaco from 'monaco-editor'
-import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
-
 
 // 编辑器配置类型
 interface EditorOptions extends monaco.editor.IStandaloneEditorConstructionOptions {
@@ -19,14 +17,6 @@ interface EditorOptions extends monaco.editor.IStandaloneEditorConstructionOptio
 interface IProps {
     option?: EditorOptions
 }
-
-// 解决vite Monaco提示错误
-// json格式语法校验
-// self.MonacoEnvironment = {
-//     getWorker() {
-//         return new tsWorker();
-//     },
-// };
 const props = withDefaults(defineProps<IProps>(), {
     option: () => ({
         value: '',
@@ -44,22 +34,23 @@ const value = defineModel('model-value', {
 const editorRef = useTemplateRef('editorRef')
 let editor = $shallowRef<monaco.editor.IStandaloneCodeEditor | null>(null)
 
+const init = () => {
+    if (!editorRef.value) return
+    editor = monaco.editor.create(
+        editorRef.value,
+        {
+            theme: "vs-white",
+            ...props.option,
+            value: value.value,
+        }
+    )
+    editor.onDidChangeModelContent(() => {
+        value.value = editor?.getValue() || ''
+    })
+}
 
 onMounted(() => {
-    if (editorRef.value) {
-        editor = monaco.editor.create(
-            editorRef.value,
-            {
-                ...props.option,
-                value: value.value,
-                theme: "vs-white",
-            }
-        )
-
-        editor.onDidChangeModelContent(() => {
-            value.value = editor?.getValue() || ''
-        })
-    }
+    init()
 })
 
 watch(value, (newValue) => {

@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, useTemplateRef, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
 import ChartHeader from '../ChartHeader/ChartHeader.vue';
 import Echarts from '../Echarts/Echarts.vue';
+import * as echarts from 'echarts'
 
 import type { EChartsOption } from "echarts";
-import type { IExtendedYOption } from '../Echarts/Echarts.vue';
+import type { IYOption } from '../ChartHeader/ChartHeader.vue'
 import type { YAXisOption } from "echarts/types/dist/shared";
 import { getLineSeries,createBaseY } from '../Echarts/ChartConfig'
+
+
+export interface IExtendedYOption extends IYOption {
+    lineStyle?:  IObject<any>;
+    areaStyle?:  IObject<any>;
+}
 
 interface IProps {
     // 标题
@@ -26,7 +33,9 @@ interface IProps {
     //X轴标签样式
     XAxisLabel?:IObject<any>,
     //是否有间隔
-    boundaryGap?: boolean
+    boundaryGap?: boolean,
+    //数据条配置
+    dataZoom?: IObject[],
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -65,7 +74,7 @@ const option = $computed<EChartsOption>(() => {
     } else {
         resultY = createBaseY()
     }
-
+    
     const options1: EChartsOption = {
         legend: {
             show: false
@@ -92,7 +101,7 @@ const option = $computed<EChartsOption>(() => {
             left: 3,
             top: 12,
             right: 0,
-            bottom: 0,
+            bottom: 35,
             containLabel: false,
         },
         xAxis: {
@@ -109,6 +118,8 @@ const option = $computed<EChartsOption>(() => {
                 color: "#D2D2ED",
                 fontSize: 12,
                 lineHeight: 12,
+                showMinLabel: true,
+                showMaxLabel: true,
                 ...props.XAxisLabel
             },
             axisTick: {
@@ -117,6 +128,53 @@ const option = $computed<EChartsOption>(() => {
         },
         yAxis: resultY,
         series,
+        dataZoom: [
+            //滚动条
+            {
+                type: 'inside',
+            },
+            {
+                show: true,
+                type: 'slider',
+                //拖动时，是否实时更新系列的视图。如果设置为 false，则只在拖拽结束的时候更新。
+                realtime: true,
+                //数据窗口范围的起始百分比
+                start: 0,   // 0%
+                end:100,   // 100%
+                xAxisIndex: [0],
+                bottom:0,
+                left: 3,
+                right: 3,
+                height: 10,  
+                backgroundColor: 'rgba(20,27,34,0.3)',
+                borderRadius:0,
+                dataBackground: {
+                    // 背景边框颜色。
+                    lineStyle: {
+                        color: 'transparent',
+                        shadowOffsetY: 30,
+                    },
+                    areaStyle:{
+                        color:"#2b3544"
+                    }
+                },
+                // 选中部分数据阴影的样式
+                selectedDataBackground:{
+                    lineStyle: {
+                        color: '#64b7f8'
+                    }
+                },
+                moveHandleSize:0,
+                fillerColor: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
+                    { offset: 0, color: "#9DF5E2" },
+                    { offset: 1, color: "#70A8F5" },
+                ]),
+                borderColor: '#4F637D',
+                textStyle: {
+                    color: 'transparent',
+                },
+            },
+        ],
     }
     return options1
 });
@@ -197,8 +255,7 @@ defineExpose({
                 {{item}}
             </div>
         </div>
-        <Echarts class="EaconComponentsLineChartComponent" id="LineChart" ref="LineChartComponent" :option @clickEffective="clickEffective" @clickZr="clickZr" 
-            @legendSelectChanged="legendSelectChanged"></Echarts>
+        <Echarts class="EaconComponentsLineChartComponent" id="LineChart" ref="LineChartComponent" :option @clickEffective="clickEffective" @clickZr="clickZr" @legendSelectChanged="legendSelectChanged"></Echarts>
     </div>
 </template>
 

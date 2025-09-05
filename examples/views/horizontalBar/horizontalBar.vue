@@ -3,8 +3,8 @@ import Monaco from '@/components/Monaco/Monaco.vue'
 
 const optionStr = $ref(`{
     title: "横向柱状图",
-    x: ["08-15", "08-16", "08-17", "08-18", "08-19"],
-    y: [
+    y: ["08-15", "08-16", "08-17", "08-18", "08-19"],
+    x: [
         1, 2, 3, 4,  
         {
             value:5,

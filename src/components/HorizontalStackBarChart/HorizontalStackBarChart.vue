@@ -5,22 +5,25 @@ import Echarts from '../Echarts/Echarts.vue';
 
 import type { EChartsOption } from "echarts";
 import type { IYOption } from '../ChartHeader/ChartHeader.vue'
-
-export interface IExtendedYOption extends IYOption {
-    barWidth?: number;
-    itemStyle?:  IObject<any>;
-    tooltip?: IObject<any>;
-}
+import type { IExtendedYOption } from '../Echarts/Echarts.vue';
 
 interface IProps {
+    // 标题
     title?: string,
+    // 颜色
     colors?: string[]
-    x: string[],
-    y: IExtendedYOption[],
-    units?:string,
+    // Y轴数据
+    y: string[],
+    //series 数据 
+    x: IExtendedYOption[],
+    //单位
+    units?:string[],
+    //tooltip
     tooltip?: IObject,
+    //是否百分比
     percentage?: boolean,
-    xAxisLabel?: boolean,
+    //X轴标签样式
+    xAxisLabel?: boolean;
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -29,23 +32,23 @@ const props = withDefaults(defineProps<IProps>(), {
     colors: () => [],
 })
 
-const chart = useTemplateRef<any>('chartComponent')
-const chartInstance = $computed(() => chart.value?.chart)
+const horizontalStackBarChart = useTemplateRef<any>('HorizontalStackBarChartComponent')
+const chartInstance = $computed(() => horizontalStackBarChart.value?.chart)
 
 
 //堆叠数据计算
 const stackYData = $computed(() => {
     //计算总和
-    const totals =  props.y.length > 0 
-        ? props.y[0].value.map((_, index) => {
+    const totals =  props.x.length > 0 
+        ? props.x[0].data.map((_, index) => {
             // 累加
-            return props.y.reduce((sum, yItem) => {
-                return sum + (yItem.value[index] || 0);
+            return props.x.reduce((sum, yItem) => {
+                return sum + (yItem.data[index] || 0);
             }, 0);
         })
         : [];
-    const stackData = props.y.map((item,idx) => {
-        const itemStackData = item.value.map((value,vIdx) => { 
+    const stackData = props.x.map((item,idx) => {
+        const itemStackData = item.data.map((value,vIdx) => { 
             // 百分比
             if(props.percentage){
                 const total = totals[vIdx]
@@ -96,7 +99,7 @@ const option = $computed(() => {
         },
         xAxis: {
             nameLocation:'start',
-            max: 'dataMax',
+            max: props.percentage ? 100 : undefined,
             splitLine: {
                 show: false,
             },
@@ -114,11 +117,11 @@ const option = $computed(() => {
             },
             axisTick: {
                 show: false
-            }
+            },
         },
         yAxis: {
             type: "category",
-            data: props.x,
+            data: props.y.length>0 ? props.y : ['-'],
             axisLabel: {
                 color: "#D2D2ED",
                 margin: 20,
@@ -148,9 +151,9 @@ const option = $computed(() => {
         series: stackYData.map((item,idx)=>({
             type: 'bar',
             stack: 'total',
-            name:item.label,
-            data: item.data,
-            color: props.colors[idx],
+            name:item.name,
+            data: item.data.length>0 ? item.data : [0],
+            color: props.colors[idx % props.colors.length],
             barWidth: item.barWidth !== undefined ? item.barWidth : 12,
             itemStyle: {
                 ...item.itemStyle,
@@ -172,15 +175,15 @@ const clickZr = (params: any) => {
 }
 
 defineExpose({
-    chart: computed(() => chart.value?.chart || null)
+    horizontalStackBarChart: computed(() => horizontalStackBarChart.value?.chart || null)
 })
 
 </script>
 
 <template>
     <div class="EaconComponents EaconComponentsHorizontalStackBarChart">
-        <chartHeader :title :y :chart="chartInstance" :colors></chartHeader>
-        <Echarts class="EaconComponentsHorizontalStackBarChartComponent" id="HorizontalStackBarChart" ref="chartComponent" :option  @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
+        <chartHeader :title :y="x" :chart="chartInstance" :colors></chartHeader>
+        <Echarts class="EaconComponentsHorizontalStackBarChartComponent" id="HorizontalStackBarChart" ref="HorizontalStackBarChartComponent" :option  @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
     </div>
 </template>
 

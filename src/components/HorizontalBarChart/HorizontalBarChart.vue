@@ -6,19 +6,23 @@ import Echarts from '../Echarts/Echarts.vue';
 import type { EChartsOption } from "echarts";
 
 interface IProps {
+    // 标题
     title?: string,
+    //数据
     x: string[],
+    // y轴数据
     y: string[],
+    //单位
     units?:string,
+    //tooltip
     tooltip?: IObject,
-    seriesOption?: Record<string, any>,
 }
 
 const props = withDefaults(defineProps<IProps>(), {
     x: () => [],
     y: () => [],
 })
-const chart = useTemplateRef<any>('chartComponent')
+const horizontalBarChart = useTemplateRef<any>('HorizontalBarChartComponent')
 
 
 const option = $computed(() => {
@@ -69,7 +73,7 @@ const option = $computed(() => {
         },
         yAxis: {
             type: 'category',
-            data: props.x,
+            data: props.y.length>0 ? props.y : ['-'],
             axisLine: {
                 show: false,
             },
@@ -99,8 +103,7 @@ const option = $computed(() => {
                         { offset: 0.5, color: "rgba(112, 168, 245, 1)" },
                     ]),
                 },
-                data: props.y,
-                ...props.seriesOption ?? {}
+                data: props.x.length>0 ? props.x : [0],
             },
         ],
     } as EChartsOption
@@ -115,7 +118,7 @@ const clickZr = (params: any) => {
 }
 
 defineExpose({
-    chart: computed(() => chart.value?.chart || null)
+    horizontalBarChart: computed(() => horizontalBarChart.value?.chart || null)
 })
 </script>
 
@@ -125,7 +128,7 @@ defineExpose({
             <div class="EaconComponentsHorizontalBarChartTitle">{{ props.title }}</div>
             <div class="EaconComponentsHorizontalBarChartUnits">{{ props.units }}</div>
         </div>
-        <Echarts class="EaconComponentsHorizontalBarChartComponent"  id="HorizontalBarChart" ref="chartComponent" :option  @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
+        <Echarts class="EaconComponentsHorizontalBarChartComponent"  id="HorizontalBarChart" ref="HorizontalBarChartComponent" :option  @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
     </div>
 </template>
 

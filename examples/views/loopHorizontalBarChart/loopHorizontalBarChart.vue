@@ -3,8 +3,8 @@ import Monaco from '@/components/Monaco/Monaco.vue'
 
 const optionStr = $ref(`{
     title: "循环横向柱状图",
-    x: ["公司1", "公司2", "公司3","公司4","公司5","公司6","公司7"],
-    y: [1, 2, 3, 4,5,6,7],
+    y: ["公司1", "公司2", "公司3","公司4","公司5","公司6","公司7"],
+    x: [1, 2, 3, 4,5,6,7],
     units:'单位：个',
     option:{
         "slides-per-view": 5,

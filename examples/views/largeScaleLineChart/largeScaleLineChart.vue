@@ -2,39 +2,19 @@
 import Monaco from '@/components/Monaco/Monaco.vue'
 import type { IPageTabsOption } from "eacon-components";
 import SfcComponent from '@/components/SfcComponent/SfcComponent.vue'
-import * as ChartComp from "./components/index";
+import * as ChartComp from "./components/Tab";
 
-const tabs = $ref<IPageTabsOption[]>([
-    {
-        label: "基础折线图",
-        value: ChartComp.Tab1,
-    },
-    {
-        label: "折线图自定义",
-        value: ChartComp.Tab2,
-    },
-    {
-        label: "自定义提示框",
-        value: ChartComp.Tab3,
-    },
-    {
-        label: "基础折线图-双轴",
-        value: ChartComp.Tab4,
-    },
-]);
-
-const formValue = $ref(tabs[0]);
+const formValue = $ref(ChartComp.Tab);
 </script>
 
 <template>
     <div class="echarts">
-        <EaPageTabs :options="tabs" v-model="formValue"></EaPageTabs>
         <div class="LineContent">
             <div class="preview">
-                <SfcComponent :code="formValue.value"></SfcComponent>
+                <SfcComponent :code="formValue"></SfcComponent>
             </div>
             <div class="options">
-                <Monaco v-model="formValue.value"></Monaco>
+                <Monaco v-model="formValue"></Monaco>
             </div>
         </div>
     </div>

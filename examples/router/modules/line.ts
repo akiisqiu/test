@@ -16,5 +16,13 @@ export default {
                 title: '折线图-基础',
             },
         },
+        {
+            path: '/largeScaleLineChart',
+            name: 'largeScaleLineChart',
+            component: () => import('@/views/largeScaleLineChart/largeScaleLineChart.vue'),
+            meta: {
+                title: '折线图-大数据量',
+            },
+        },
     ]
 }

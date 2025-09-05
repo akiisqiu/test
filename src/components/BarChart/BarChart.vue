@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue';
+import { computed, nextTick, onMounted, useTemplateRef, watch } from 'vue';
 import ChartHeader from '../ChartHeader/ChartHeader.vue';
 import Echarts from '../Echarts/Echarts.vue';
 
 import type { EChartsOption } from "echarts";
-import type { IYOption } from '../ChartHeader/ChartHeader.vue'
+import type { IExtendedYOption } from '../Echarts/Echarts.vue';
+import type { YAXisOption } from "echarts/types/dist/shared";
+import { getBarSeries,createBaseY } from '../Echarts/ChartConfig'
 
-export interface IExtendedYOption extends IYOption {
-    barWidth?: number;
-    barMinWidth?:number;
-    itemStyle?:  IObject<any>;
-    tooltip?: IObject<any>;
-}
 
 interface IProps {
     // 标题
@@ -23,13 +19,13 @@ interface IProps {
     //series 数据 
     y: IExtendedYOption[],
     //单位
-    units?:string[],
+    units?: string[],
     //tooltip
     tooltip?: IObject,
     //是否双y轴
     doubleY?: boolean,
     //X轴标签样式
-    XAxisLabel?:IObject<any>;
+    XAxisLabel?: IObject<any>;
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -40,56 +36,29 @@ const props = withDefaults(defineProps<IProps>(), {
 })
 
 
-const chart = useTemplateRef<any>('chartComponent')
-const chartInstance = $computed(() => chart.value?.chart)
+const barChart = useTemplateRef<any>('BarChartComponent')
+const chartInstance = $computed(() => barChart.value?.chart)
 
 
 const option = $computed(() => {
-    //基础y轴
-    const baseY = {
-        type: 'value',
-        axisLabel: {
-            color: "#D2D2ED",
-            fontSize: 12,
-        },
-        splitLine: {
-            lineStyle: {
-                color: 'rgba(255,255,255,.04)'
-            }
-        },
-        axisLine: {
-        },
-        axisTick: {
-            show: false
-        }
-    }
-    //计算y轴数据
-    const resultY =  (props.doubleY && props.y?.length)
-        ? props.y.map(item=>({
-            ...baseY,
-            _name: item.label || '',
-        })):baseY
-
     //计算显示数据
-    const series = props.y?.map((item, idx) => {
-        return {
-            type: "bar",
-            name: item.label,
-            data: item.value,
-            color: props.colors[idx],
-            yAxisIndex: props.doubleY ? idx : undefined,
-            barWidth: item.barWidth === null ? null : (item.barWidth !== undefined ?item.barWidth : 12),
-            barMaxWidth: item.barMinWidth, 
-            barMinHeight: 4,
-            itemStyle: {
-                ...item.itemStyle,
-                borderWidth: 2,
-                borderRadius: item.itemStyle?.borderRadius !== undefined
-                ? item.itemStyle?.borderRadius   : 12                              
-            },
-            ...item
-        }
+    const series: Array<EChartsOption['series']> = []
+    props.y.forEach((item, index) => {
+        const result = getBarSeries(item, index, props)
+        series.push(result)
     })
+
+    //计算y轴数据
+    let resultY: EChartsOption['yAxis']
+    if (props.doubleY && props.y?.length) {
+        resultY = props.y.map(item=>({
+            ...createBaseY(),
+            _name: item.name || '',
+            alignTicks: true,
+        }))
+    } else {
+        resultY = createBaseY()
+    }
     return {
         legend: {
             show: false
@@ -120,7 +89,8 @@ const option = $computed(() => {
             containLabel: true,
         },
         xAxis: {
-            data: props.x,
+            data: props.x.length>0 ? props.x : ['-'],
+            type: 'category',
             splitLine: {
                 show: false,
             },
@@ -142,7 +112,59 @@ const option = $computed(() => {
     } as EChartsOption
 });
 
-const $emit = defineEmits(['clickEffective', 'clickZr'])
+
+
+// 主动获取Y轴最大值的工具函数
+const getYAxisMax = async () => {
+    await nextTick()
+    if (!barChart.value.chart) return;
+    const formatter = function(value: number, max: number) {
+        if(value === 0) return value
+        if (max >= 1e8) { 
+            return (value / 1e8) + '亿';
+        } else if (max >= 1e4) {
+            return (value / 1e4) + '万';
+        }
+        return value;
+    };
+
+    if(!props.doubleY){
+        // 获取Y轴模型
+        const yAxisModel = barChart.value.chart.getModel().getComponent('yAxis', 0);
+        //  获取轴的范围（[min, max]），取第二个值为最大值
+        const [_, max] = yAxisModel.axis.scale.getExtent();
+        barChart.value.chart.setOption({
+            yAxis: {
+                axisLabel: { formatter: (value: number) => formatter(value, max)}
+            }
+        });
+    } else {
+        const yAxis0Model = barChart.value.chart.getModel().getComponent('yAxis', 0);
+        const yAxis1Model = barChart.value.chart.getModel().getComponent('yAxis', 1);
+        const [_, max0] = yAxis0Model.axis.scale.getExtent();
+        const [__, max1] = yAxis1Model.axis.scale.getExtent();
+        barChart.value.chart.setOption({
+            yAxis: [
+                { axisLabel: { formatter: (value: number) => formatter(value, max0) } }, // 第0个Y轴
+                { axisLabel: { formatter: (value: number) => formatter(value, max1) } }  // 第1个Y轴
+            ]
+        });
+    }
+};
+
+onMounted(() => {
+    getYAxisMax();
+});
+
+watch(
+    () => option,
+    () => {
+        // 配置更新后延迟获取
+        getYAxisMax()
+    }
+);
+
+const $emit = defineEmits(['clickEffective', 'clickZr','legendSelectChanged'])
 // 点击事件
 const clickEffective = (params: any) => {
     $emit('clickEffective', params)
@@ -150,9 +172,13 @@ const clickEffective = (params: any) => {
 const clickZr = (params: any) => {
     $emit('clickZr', params)
 }
-
+//图例勾选
+const legendSelectChanged = (params: any)=>{
+    getYAxisMax()
+    $emit('legendSelectChanged',params)
+}
 defineExpose({
-    chart: computed(() => chart.value?.chart || null)
+    barChart: computed(() => barChart.value?.chart || null)
 })
 
 </script>
@@ -162,10 +188,11 @@ defineExpose({
         <chartHeader :title :y :chart="chartInstance" :colors></chartHeader>
         <div class="EaconComponentsBarChartUnit">
             <div v-for="item in units" class="EaconComponentsBarChartUnitItem">
-                {{item}}
+                {{ item }}
             </div>
         </div>
-        <Echarts class="EaconComponentsBarChartComponent" id="BarChart" ref="chartComponent" :option @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
+        <Echarts class="EaconComponentsBarChartComponent" id="BarChart" ref="BarChartComponent" :option
+            @clickEffective="clickEffective" @clickZr="clickZr" @legendSelectChanged="legendSelectChanged"></Echarts>
     </div>
 </template>
 
@@ -175,15 +202,16 @@ defineExpose({
     display: flex;
     flex-direction: column;
     gap: 8px;
-    .EaconComponentsBarChartUnit{
+
+    .EaconComponentsBarChartUnit {
         display: flex;
         justify-content: space-between;
         color: #D2D2ED;
-        font-size: 1rem;
+        font-size: .75rem;
     }
+
     .EaconComponentsBarChartComponent {
         height: 1%;
-        flex: 1 1 auto;
-    }
+        flex: 1 1 auto;    }
 }
 </style>

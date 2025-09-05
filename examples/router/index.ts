@@ -3,6 +3,7 @@ import layouts from '@/layouts/layouts.vue'
 
 import bar from './modules/bar.ts'
 import line from './modules/line.ts'
+import mix from './modules/mix.ts'
 
 export const routes = [
   {
@@ -48,7 +49,8 @@ export const routes = [
     ]
   },
   bar,
-  line
+  line,
+  mix
 ]
 
 const router = createRouter({

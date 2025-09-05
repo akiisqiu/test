@@ -1,25 +1,30 @@
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue';
+import { computed, nextTick, onMounted, useTemplateRef, watch } from 'vue';
 import ChartHeader from '../ChartHeader/ChartHeader.vue';
 import Echarts from '../Echarts/Echarts.vue';
 
 import type { EChartsOption } from "echarts";
 import type { IYOption } from '../ChartHeader/ChartHeader.vue'
-
-export interface IExtendedYOption extends IYOption {
-    barWidth?: number;
-    itemStyle?: IObject<any>;
-    tooltip?: IObject<any>;
-}
+import type { IExtendedYOption } from '../Echarts/Echarts.vue';
 
 interface IProps {
+    // 标题
     title?: string,
+    // 颜色
     colors?: string[]
+    // x轴数据
     x: string[],
+    //series 数据 
     y: IExtendedYOption[],
-    units?: string[],
+    //单位
+    units?:string[],
+    //tooltip
     tooltip?: IObject,
+    //是否百分比
     percentage?: boolean,
+    //X轴标签样式
+    XAxisLabel?: IObject<any>;
+    //其他数据传入
     anotherData?: IObject,
 }
 
@@ -29,22 +34,22 @@ const props = withDefaults(defineProps<IProps>(), {
     colors: () => [],
 })
 
-const chart = useTemplateRef<any>('chartComponent')
-const chartInstance = $computed(() => chart.value?.chart)
+const stackBarChart = useTemplateRef<any>('StackBarChartComponent')
+const chartInstance = $computed(() => stackBarChart.value?.chart)
 
 //堆叠数据计算
 const stackYData = $computed(() => {
     //计算总和
     const totals = props.y.length > 0
-        ? props.y[0].value.map((_, index) => {
+        ? props.y[0].data.map((_, index) => {
             // 累加
             return props.y.reduce((sum, yItem) => {
-                return sum + (yItem.value[index] || 0);
+                return sum + (yItem.data[index] || 0);
             }, 0);
         })
         : [];
     const stackData = props.y.map((item, idx) => {
-        const itemStackData = item.value.map((value, vIdx) => {
+        const itemStackData = item.data.map((value, vIdx) => {
             // 百分比
             if (props.percentage) {
                 const total = totals[vIdx]
@@ -93,7 +98,7 @@ const option = $computed(() => {
             containLabel: true,
         },
         xAxis: {
-            data: props.x,
+            data: props.x.length>0 ? props.x : ['-'],
             splitLine: {
                 show: false,
             },
@@ -104,6 +109,7 @@ const option = $computed(() => {
                 color: "#D2D2ED",
                 fontSize: 12,
                 lineHeight: 12,
+                ...props.XAxisLabel
             },
             axisTick: {
                 show: false
@@ -130,9 +136,9 @@ const option = $computed(() => {
         series: stackYData.map((item, idx) => ({
             type: 'bar',
             stack: 'total',
-            name: item.label,
-            data: item.data,
-            color: props.colors[idx],
+            name: item.name,
+            data: item.data.length>0 ? item.data : [0],
+            color: props.colors[idx % props.colors.length],
             barWidth: item.barWidth !== undefined ? item.barWidth : 12,
             itemStyle: {
                 ...item.itemStyle,
@@ -144,7 +150,46 @@ const option = $computed(() => {
         })),
     } as EChartsOption
 });
-const $emit = defineEmits(['clickEffective', 'clickZr'])
+
+
+// 主动获取Y轴最大值的工具函数
+const getYAxisMax = async () => {
+    await nextTick()
+    if (!stackBarChart.value.chart) return;
+    const formatter = function(value: number, max: number) {
+        if(value === 0) return value
+        if (max >= 1e8) { 
+            return (value / 1e8) + '亿';
+        } else if (max >= 1e4) {
+            return (value / 1e4) + '万';
+        }
+        return value;
+    };
+
+    // 获取Y轴模型
+    const yAxisModel = stackBarChart.value.chart.getModel().getComponent('yAxis', 0);
+    //  获取轴的范围（[min, max]），取第二个值为最大值
+    const [_, max] = yAxisModel.axis.scale.getExtent();
+    stackBarChart.value.chart.setOption({
+        yAxis: {
+            axisLabel: { formatter: (value: number) => formatter(value, max)}
+        }
+    });
+};
+
+onMounted(() => {
+    getYAxisMax();
+});
+
+watch(
+    () => option,
+    () => {
+        // 配置更新后延迟获取
+        getYAxisMax()
+    }
+);
+
+const $emit = defineEmits(['clickEffective', 'clickZr','legendSelectChanged'])
 // 点击事件
 const clickEffective = (params: any) => {
     $emit('clickEffective', params)
@@ -152,9 +197,13 @@ const clickEffective = (params: any) => {
 const clickZr = (params: any) => {
     $emit('clickZr', params)
 }
-
+//图例勾选
+const legendSelectChanged = (params: any)=>{
+    getYAxisMax()
+    $emit('legendSelectChanged',params)
+}
 defineExpose({
-    chart: computed(() => chart.value?.chart || null)
+    stackBarChart: computed(() => stackBarChart.value?.chart || null)
 })
 </script>
 
@@ -166,8 +215,8 @@ defineExpose({
                 {{ item }}
             </div>
         </div>
-        <Echarts class="EaconComponentsStackBarChartComponent" id="StackBarChart" ref="chartComponent" :option
-            @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
+        <Echarts class="EaconComponentsStackBarChartComponent" id="StackBarChart" ref="StackBarChartComponent" :option
+            @clickEffective="clickEffective" @clickZr="clickZr" @legendSelectChanged="legendSelectChanged"></Echarts>
     </div>
 </template>
 

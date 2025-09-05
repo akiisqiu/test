@@ -42,10 +42,10 @@ const rightTitle = $computed(()=>{
     return tab1Data.y[1].label
 })
 const leftValue = $computed(()=>{
-    return tab1Data.y[0].value.reduce((a: number, b: number) => a + b, 0)
+    return tab1Data.y[0].data.reduce((a: number, b: number) => a + b, 0)
 })
 const rightValue = $computed(()=>{
-    return tab1Data.y[1].value.reduce((a: number, b: number) => a + b, 0)
+    return tab1Data.y[1].data.reduce((a: number, b: number) => a + b, 0)
 })
 const topColors = $computed(()=>{
     return tab1Data.colors

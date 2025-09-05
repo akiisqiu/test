@@ -1,25 +1,21 @@
 <script setup lang="ts">
-import Monaco from '@/components/Monaco/Monaco.vue'
 import type { IPageTabsOption } from "eacon-components";
+import Monaco from '@/components/Monaco/Monaco.vue'
 import SfcComponent from '@/components/SfcComponent/SfcComponent.vue'
-import * as ChartComp from "./components/index";
+import * as ChartComp from "./components/Tab";
 
 const tabs = $ref<IPageTabsOption[]>([
     {
-        label: "基础折线图",
+        label: "基础混合图",
         value: ChartComp.Tab1,
     },
     {
-        label: "折线图自定义",
+        label: "基础混合图-双轴",
         value: ChartComp.Tab2,
     },
     {
-        label: "自定义提示框",
+        label: "基础混合图-堆叠折线",
         value: ChartComp.Tab3,
-    },
-    {
-        label: "基础折线图-双轴",
-        value: ChartComp.Tab4,
     },
 ]);
 
@@ -29,7 +25,7 @@ const formValue = $ref(tabs[0]);
 <template>
     <div class="echarts">
         <EaPageTabs :options="tabs" v-model="formValue"></EaPageTabs>
-        <div class="LineContent">
+        <div class="mixLineBarChartContent">
             <div class="preview">
                 <SfcComponent :code="formValue.value"></SfcComponent>
             </div>
@@ -49,7 +45,7 @@ const formValue = $ref(tabs[0]);
         width: 100%;
         border-bottom: var(--ea-border);
     }
-    .LineContent{
+    .mixLineBarChartContent{
         padding-top: 20px;
         display: flex;
         flex: 1 1 auto;

@@ -1,40 +1,49 @@
 <script setup lang="ts">
 import Monaco from '@/components/Monaco/Monaco.vue'
-import config from './config'
 import type { IPageTabsOption } from "eacon-components";
-import { watch } from "vue";
-import { objectToString } from "@/utils/public";
+import SfcComponent from '@/components/SfcComponent/SfcComponent.vue'
+import * as ChartComp from "./components/index";
 
-// tab标签
-const tabOptions = $computed<IPageTabsOption[]>(() => {
-    const values = Object.values(config)
-    return values.map(item => ({
-        label: item.title,
-        value: objectToString(item),
-    }))
-})
-const formValue = $ref(tabOptions[0]);
+const tabs = $ref<IPageTabsOption[]>([
+    {
+        label: "基础柱状图",
+        value: ChartComp.Tab1,
+    },
+    {
+        label: "自定义单个柱子颜色",
+        value: ChartComp.Tab2,
+    },
+    {
+        label: "柱状图自定义",
+        value: ChartComp.Tab3,
+    },
+    {
+        label: "带背景色的柱状图",
+        value: ChartComp.Tab4,
+    },
+    {
+        label: "自定义提示框",
+        value: ChartComp.Tab5,
+    },
+    {
+        label: "双轴",
+        value: ChartComp.Tab6,
+    },
+    {
+        label: "点击功能示例",
+        value: ChartComp.Tab7,
+    },
+]);
 
-// 图表配置
-let chartOption = $ref({})
-watch(() => formValue.value, (nVal, oVal) => {
-    try {
-        chartOption = new Function(`return (${nVal})`)()
-    } catch (e) {
-        console.warn('配置解析失败不更新', e)
-    }
-}, { immediate: true})
-
-
-
+const formValue = $ref(tabs[0]);
 </script>
 
 <template>
     <div class="echarts">
-        <EaPageTabs :options="tabOptions" v-model="formValue"></EaPageTabs>
+        <EaPageTabs :options="tabs" v-model="formValue"></EaPageTabs>
         <div class="BarContent">
             <div class="preview">
-                <EaBarChart v-bind="chartOption"></EaBarChart>
+                <SfcComponent :code="formValue.value"></SfcComponent>
             </div>
             <div class="options">
                 <Monaco v-model="formValue.value"></Monaco>

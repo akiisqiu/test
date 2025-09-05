@@ -7,24 +7,24 @@
             <template #reference>
                 <div class="chartLegendContainer">
                     <div ref="chartLegendDom" class="chartLegend chartLegendHidden" :class="{ showMore }">
-                        <div class="chartLegendItem" v-for="(item, idx) in y" :key="idx" :class="{ hidden: hidden.has(item.label), opacity: idx >= showY }" @click="handleChangeLegend(item)">
+                        <div class="chartLegendItem" v-for="(item, idx) in y" :key="idx" :class="{ hidden: hidden.has(item.name), opacity: idx >= showY }" @click="handleChangeLegend(item)">
                             <div v-if="!item.itemType || item.itemType === 'bar'" class="chartLegendItemMark" :class="item.itemType" :style="{ background: colors[idx], borderColor: colors[idx] }"></div>
                             <div v-else-if="item.itemType === 'line'" class="chartLegendItemMark" :class="item.itemType" :style="{ color: colors[idx] }">
                                 <EaIcon type="icon-zhexiantuli"></EaIcon>
                             </div>
-                            {{ item.label }}
+                            {{ item.name }}
                         </div>
                     </div>
                     <EaIcon v-show="showMore" class="chartLegendMore" type="icon-more"></EaIcon>
                 </div>
             </template>
             <div class="chartLegend" :style="{ 'grid-template-columns': `repeat(${columns}, 1fr)` }">
-                <div class="chartLegendItem" v-for="(item, idx) in y" :key="idx" :class="{ hidden: hidden.has(item.label) }" @click="handleChangeLegend(item)">
+                <div class="chartLegendItem" v-for="(item, idx) in y" :key="idx" :class="{ hidden: hidden.has(item.name) }" @click="handleChangeLegend(item)">
                     <div v-if="!item.itemType || item.itemType === 'bar'" class="chartLegendItemMark" :class="item.itemType" :style="{ background: colors[idx], borderColor: colors[idx] }"></div>
                     <div v-else-if="item.itemType === 'line'" class="chartLegendItemMark" :class="item.itemType" :style="{ color: colors[idx] }">
                         <EaIcon type="icon-zhexiantuli"></EaIcon>
                     </div>
-                    <div class="chartLegendItemLabel">{{ item.label }}</div>
+                    <div class="chartLegendItemLabel">{{ item.name }}</div>
                 </div>
             </div>
         </ElPopover>
@@ -39,8 +39,8 @@ import { getTextWidth } from 'eacon-components'
 
 export interface IYOption {
     itemType?: 'bar' | 'line'
-    label: string,
-    value: number[]
+    name: string,
+    data: number[]
 }
 interface IProps {
     title?: string,
@@ -61,7 +61,7 @@ let columns = $ref(1)
 
 const hidden = $ref(new Set())
 const handleChangeLegend = (item: IYOption) => {
-    const key = item.label
+    const key = item.name
     hidden.has(key) ? hidden.delete(key) : hidden.add(key)
     props.chart?.dispatchAction({
         type: 'legendToggleSelect',
@@ -72,7 +72,7 @@ const computedTooltip = () => {
     width = Math.ceil(chartHeader.value?.getBoundingClientRect().width ?? 0 * 0.65)
     const htmlElement = document.querySelector('html');
     const fz = htmlElement ? parseFloat(htmlElement.style.fontSize || '16') : 16;
-    const textWidths = props.y.map(item => getTextWidth(item.label, '1rem'))
+    const textWidths = props.y.map(item => getTextWidth(item.name, '1rem'))
     const maxWidth = Math.ceil(Math.max(...textWidths)) + 1 + 1.06 * fz
     const gap = .4 * fz
     const itemWidthWithGap = maxWidth + gap
