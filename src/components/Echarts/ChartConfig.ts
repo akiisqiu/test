@@ -1,42 +1,31 @@
-import type { EChartsOption } from 'echarts';
-import type { IExtendedYOption, IProps } from './Echarts.vue'; 
+import type { EChartsOption, SeriesOption } from 'echarts';
+import type { ISeriesOption } from './Echarts.vue'; 
 import type { YAXisOption } from 'echarts/types/dist/shared';
 
 //基础Y轴
 export const createBaseY = (): YAXisOption => ({
     type: 'value',
     axisLabel: {
-        color: "#D2D2ED",
         fontSize: 12,
         showMinLabel:true,
         showMaxLabel:true,
         hideOverlap: true
     },
-    splitLine: {
-        lineStyle: {
-            color: 'rgba(255,255,255,.04)'
-        }
-    },
-    axisLine: {
-    },
-    axisTick: {
-        show: false
-    }
 })
 
 //配置柱状图
-export const getBarSeries = (item: IExtendedYOption, idx: number, props: IProps): EChartsOption['series'] => {
+export const getBarSeries = (item: ISeriesOption, idx: number, doubleY?:Boolean,colors?:string[]): SeriesOption=> {
     let yAxisIndex = 0
     // 双y轴
-    if(props.doubleY){
-        yAxisIndex = item.yAxisIndex ? item.yAxisIndex : (idx > 1 ? 1 : idx )
+    if(doubleY){
+        yAxisIndex = (item.yAxisIndex ?? (idx > 1 ? 1 : idx));
     }
 
     return {
         ...item,
         type: 'bar',
         data: item.data.length > 0 ? item.data : [0],
-        color: props.colors && props.colors[idx % props.colors.length],
+        color: colors && colors[idx % colors.length],
         yAxisIndex: yAxisIndex,
         barWidth: item.barWidth === null ? 'undefined' : (item.barWidth !== undefined ? item.barWidth : 12),
         barMaxWidth: item.barMinWidth,
@@ -52,17 +41,17 @@ export const getBarSeries = (item: IExtendedYOption, idx: number, props: IProps)
     };
 };
 //配置折线图
-export const getLineSeries = (item: IExtendedYOption, idx: number,props: IProps): EChartsOption['series'] => {
+export const getLineSeries = (item: ISeriesOption, idx: number,doubleY?:Boolean,colors?:string[]): SeriesOption  => {
     let yAxisIndex = 0
     // 双y轴
-    if(props.doubleY){
-        yAxisIndex = item.yAxisIndex ? item.yAxisIndex : (idx > 1 ? 1 : idx )
+    if(doubleY){
+        yAxisIndex = (item.yAxisIndex ?? (idx > 1 ? 1 : idx));
     }
     return {
         ...item,
         type: 'line',
         data: item.data.length > 0 ? item.data : [0],
-        color: props.colors && props.colors[idx % props.colors.length],
+        color: colors && colors[idx % colors.length],
         yAxisIndex: yAxisIndex,
         lineStyle: {
             width: 3,
@@ -74,20 +63,20 @@ export const getLineSeries = (item: IExtendedYOption, idx: number,props: IProps)
     }
 };
 //配置堆叠图
-export const getStackSeries = ( stackItems: IExtendedYOption[], props: IProps) => {
+export const getStackSeries = ( stackItems: ISeriesOption[], doubleY?:Boolean,colors?:string[]): SeriesOption[]   => {
     const stackName = stackItems[0]?.stack || 'total';
     return stackItems.map((item) => {
         let yAxisIndex = 0
         // 双y轴
-        if(props.doubleY &&item.index ){
-            yAxisIndex = item.yAxisIndex ? item.yAxisIndex : ( item.index> 1 ? 1 : item.index )
+        if(doubleY &&item.index ){
+            yAxisIndex = (item.yAxisIndex ?? (item.index > 1 ? 1 : item.index));
         }
         return {
             ...item, 
             type: 'bar' , 
             stack: stackName, 
             data: item.data.length > 0 ? item.data : [0],
-            color: props.colors &&item.index && props.colors[item.index % props.colors.length],
+            color: colors && item.index !== undefined? colors[item.index % colors.length]: undefined,
             barWidth: item.barWidth ?? 12, 
             itemStyle: {
                 borderWidth: 2,

@@ -1,15 +1,15 @@
 import layouts from '@/layouts/layouts.vue'
 export default {
-    path: '/line',
+    path: '/echarts/lineChart',
     name: 'line',
-    redirect: '/lineChart',
+    redirect: '/echarts/lineChart',
     component: layouts,
     meta: {
         title: '折线图',
     },
     children: [
         {
-            path: '/lineChart',
+            path: '/echarts/lineChart',
             name: 'lineChart',
             component: () => import('@/views/lineChart/lineChart.vue'),
             meta: {
@@ -17,7 +17,7 @@ export default {
             },
         },
         {
-            path: '/largeScaleLineChart',
+            path: '/echarts/largeScaleLineChart',
             name: 'largeScaleLineChart',
             component: () => import('@/views/largeScaleLineChart/largeScaleLineChart.vue'),
             meta: {

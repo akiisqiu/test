@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import Monaco from '@/components/Monaco/Monaco.vue'
-import type { IPageTabsOption } from "eacon-components";
 import SfcComponent from '@/components/SfcComponent/SfcComponent.vue'
-import * as ChartComp from "./components/Tab";
+import * as ChartComp from "./components";
 
 const formValue = $ref(ChartComp.Tab);
 </script>
@@ -25,10 +24,6 @@ const formValue = $ref(ChartComp.Tab);
     display: flex;
     flex-direction: column;
     padding: 20px;
-    .EaconComponentsPageTabs {
-        width: 100%;
-        border-bottom: var(--ea-border);
-    }
     .LineContent{
         padding-top: 20px;
         display: flex;

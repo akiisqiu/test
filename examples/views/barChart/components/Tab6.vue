@@ -1,10 +1,10 @@
 <!-- 双轴 -->
 <template>
-    <EaBarChart v-bind="chartOption"></EaBarChart>
+    <EaBarChart v-bind="chartOption":theme></EaBarChart>
 </template>
 
 <script lang='ts' setup>
-import { ref } from "vue";
+import { onBeforeUnmount, ref } from "vue";
 
 const chartOption = ref({
     title: "基础柱状图-双轴 ",
@@ -27,6 +27,13 @@ const chartOption = ref({
     units:["单位：h",'单位：t'],
     doubleY:true
 })
+
+let theme = ref(localStorage.getItem("theme") || "white");
+const changeTheme = (e: string) => {
+    theme.value = e;
+};
+window.changeTheme.add(changeTheme);
+onBeforeUnmount(() => window.changeTheme.delete(changeTheme));
 </script>
 
 <style scoped>

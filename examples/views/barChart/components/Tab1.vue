@@ -1,10 +1,23 @@
 <!-- 基础柱状图 -->
 <template>
-    <EaBarChart v-bind="chartOption"></EaBarChart>
+    <div class="aki">
+        <div class="test">
+            <EaBarChart v-bind="chartOption" :theme></EaBarChart>
+            <EaBarChart v-bind="chartOption" :theme></EaBarChart>
+            <EaBarChart v-bind="chartOption" :theme></EaBarChart>
+            <EaBarChart v-bind="chartOption" :theme></EaBarChart>
+        </div>
+        <div class="test">
+            <EaBarChart v-bind="chartOption" :theme></EaBarChart>
+            <EaBarChart v-bind="chartOption" :theme></EaBarChart>
+            <EaBarChart v-bind="chartOption" :theme></EaBarChart>
+            <EaBarChart v-bind="chartOption" :theme></EaBarChart>
+        </div>
+    </div>
 </template>
 
 <script lang='ts' setup>
-import { ref } from "vue";
+import { onBeforeUnmount, ref } from "vue";
 
 const chartOption = ref({
     title: "基础柱状图",
@@ -12,7 +25,7 @@ const chartOption = ref({
     y: [
         {
             name: "运输设备",
-            data: [1, 2, 3, 4, 5],
+            data: [10000, 2, 3, 4, 5],
         },
         {
             name: "采装设备",
@@ -20,6 +33,18 @@ const chartOption = ref({
         },
         {
             name: "辅助设备",
+            data: [1, 2, 3, 4, 5]
+        },
+        {
+            name: "运输设备1",
+            data: [10000, 2, 3, 4, 5],
+        },
+        {
+            name: "采装设备1",
+            data: [5, 4, 3, 2, 1],
+        },
+        {
+            name: "辅助设备1",
             data: [1, 2, 3, 4, 5]
         }
     ],
@@ -30,7 +55,26 @@ const chartOption = ref({
     ],
     units:["单位：h"]
 })
+
+let theme = ref(localStorage.getItem("theme") || "white");
+const changeTheme = (e: string) => {
+    theme.value = e;
+};
+window.changeTheme.add(changeTheme);
+onBeforeUnmount(() => window.changeTheme.delete(changeTheme));
 </script>
 
 <style scoped>
+.aki{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    .test{
+        width: 50%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+}
 </style>

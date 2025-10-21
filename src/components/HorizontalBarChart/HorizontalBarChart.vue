@@ -16,6 +16,8 @@ interface IProps {
     units?:string,
     //tooltip
     tooltip?: IObject,
+    //主题色
+    theme?: string
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -26,26 +28,11 @@ const horizontalBarChart = useTemplateRef<any>('HorizontalBarChartComponent')
 
 
 const option = $computed(() => {
-    return {
+    const options1: EChartsOption = {
         legend: {
             show: false
         },
         tooltip: {
-            trigger: "axis",
-            axisPointer: {
-                type: "shadow",
-                shadowStyle: {
-                    color: "rgba(255,255,255,0.05)",
-                }
-            },
-            className: "ChartsTooltip",
-            appendToBody: true,
-            confine: true,
-            backgroundColor: "rgba(0,0,0, .6)",
-            borderColor: "rgba(0,0,0)",
-            textStyle: {
-                color: "#fff",
-            },
             ...props.tooltip
         },
         grid: {
@@ -53,35 +40,21 @@ const option = $computed(() => {
             top: 12,
             right: 0,
             bottom: 0,
-            containLabel: true,
         },
         xAxis: {
+            type: "value",
             max: "dataMax",
             splitLine: {
                 show: false,
             },
-            axisLine: {
-                show: false,
-            },
             axisLabel: {
                 show:false,
-                color: "#D2D2ED",
-                fontSize: 12,
-                alignMaxLabel: "right",
-                alignMinLabel: "left",
             },
         },
         yAxis: {
             type: 'category',
             data: props.y.length>0 ? props.y : ['-'],
-            axisLine: {
-                show: false,
-            },
-            axisTick: {
-                show: false,
-            },
             axisLabel: {
-                color: "#D2D2ED",
                 interval: 0,
                 fontSize: 12,
             },
@@ -106,7 +79,8 @@ const option = $computed(() => {
                 data: props.x.length>0 ? props.x : [0],
             },
         ],
-    } as EChartsOption
+    }
+    return options1
 });
 const $emit = defineEmits(['clickEffective', 'clickZr'])
 // 点击事件
@@ -128,13 +102,15 @@ defineExpose({
             <div class="EaconComponentsHorizontalBarChartTitle">{{ props.title }}</div>
             <div class="EaconComponentsHorizontalBarChartUnits">{{ props.units }}</div>
         </div>
-        <Echarts class="EaconComponentsHorizontalBarChartComponent"  id="HorizontalBarChart" ref="HorizontalBarChartComponent" :option  @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
+        <Echarts class="EaconComponentsHorizontalBarChartComponent"  id="HorizontalBarChart" ref="HorizontalBarChartComponent" :option  @clickEffective="clickEffective" 
+            @clickZr="clickZr" :theme></Echarts>
     </div>
 </template>
 
 <style lang="scss" scoped>
 .EaconComponentsHorizontalBarChart {
     height: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     .header{

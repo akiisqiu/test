@@ -4,6 +4,8 @@ import layouts from '@/layouts/layouts.vue'
 import bar from './modules/bar.ts'
 import line from './modules/line.ts'
 import mix from './modules/mix.ts'
+import gauge from './modules/gauge.ts'
+import pie from './modules/pie.ts'
 
 export const routes = [
   {
@@ -14,7 +16,8 @@ export const routes = [
     meta: {
       title: '首页',
       hideChildren: true,
-      showLog: false
+      showLog: false,
+      menu:false
     },
     children: [
       {
@@ -48,9 +51,33 @@ export const routes = [
       }
     ]
   },
+  {
+    path: '/word',
+    name: 'wordRoot',
+    redirect: '/word',
+    component: layouts,
+    meta: {
+      title: '文档',
+      hideChildren: true,
+      showLog: false,
+      menu:false
+    },
+    children: [
+      {
+        path: '/word',
+        name: 'word',
+        component: () => import('@/views/word/word.vue'),
+        meta: {
+          title: '文档'
+        }
+      }
+    ]
+  },
   bar,
   line,
-  mix
+  mix,
+  gauge,
+  pie
 ]
 
 const router = createRouter({

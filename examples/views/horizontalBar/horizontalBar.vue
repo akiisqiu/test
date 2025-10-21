@@ -1,40 +1,19 @@
 <script setup lang="ts">
 import Monaco from '@/components/Monaco/Monaco.vue'
+import SfcComponent from '@/components/SfcComponent/SfcComponent.vue'
+import * as ChartComp from "./components";
 
-const optionStr = $ref(`{
-    title: "横向柱状图",
-    y: ["08-15", "08-16", "08-17", "08-18", "08-19"],
-    x: [
-        1, 2, 3, 4,  
-        {
-            value:5,
-            itemStyle: {
-                "color": "#6EF366"
-            }
-        },
-    ],
-    units:'单位：个',
-}`)
-const option = $computed(() => {
-    try {
-        return new Function(`return (${optionStr})`)()
-    } catch (e) {
-        console.warn('json 解析失败', e)
-        return {
-            series: []
-        }
-    }
-})
 
+const formValue = $ref(ChartComp.Tab);
 </script>
 
 <template>
     <div class="echarts">
         <div class="preview">
-            <EaHorizontalBarChart v-bind="option"></EaHorizontalBarChart>
+            <SfcComponent :code="formValue"></SfcComponent>
         </div>
         <div class="options">
-            <Monaco v-model="optionStr"></Monaco>
+            <Monaco v-model="formValue"></Monaco>
         </div>
     </div>
 </template>

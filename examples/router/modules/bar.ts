@@ -1,15 +1,15 @@
 import layouts from '@/layouts/layouts.vue'
 export default {
-    path: '/bar',
+    path: '/echarts/bar',
     name: 'bar',
-    redirect: '/barChart',
+    redirect: '/echarts/barChart',
     component: layouts,
     meta: {
         title: '柱状图',
     },
     children: [
         {
-            path: '/barChart',
+            path: '/echarts/barChart',
             name: 'barChart',
             component: () => import('@/views/barChart/barChart.vue'),
             meta: {
@@ -17,7 +17,7 @@ export default {
             }
         },
         {
-            path: '/horizontalBar',
+            path: '/echarts/horizontalBar',
             name: 'horizontalBar',
             component: () => import('@/views/horizontalBar/horizontalBar.vue'),
             meta: {
@@ -25,7 +25,7 @@ export default {
             }
         },
         {
-            path: '/loopHorizontalBarChart',
+            path: '/echarts/loopHorizontalBarChart',
             name: 'loopHorizontalBarChart',
             component: () => import('@/views/loopHorizontalBarChart/loopHorizontalBarChart.vue'),
             meta: {
@@ -33,7 +33,7 @@ export default {
             }
         },
         {
-            path: '/stackBarChart',
+            path: '/echarts/stackBarChart',
             name: 'stackBarChart',
             component: () => import('@/views/stackBarChart/stackBarChart.vue'),
             meta: {
@@ -41,7 +41,7 @@ export default {
             }
         },
         {
-            path: '/horizontalStackBarChart',
+            path: '/echarts/horizontalStackBarChart',
             name: 'horizontalStackBarChart',
             component: () => import('@/views/horizontalStackBarChart/horizontalStackBarChart.vue'),
             meta: {

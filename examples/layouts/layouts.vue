@@ -3,13 +3,14 @@
     <div class="layoutsHead">
       <EaLayoutHeader title="云控平台一体化组件库">
         <template #right>
-          <EaButton plain class="theme" @click="handleChangeTheme"
-            >切换主题</EaButton
-          >
+          <ElMenu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" :ellipsis="false">
+            <ElMenuItem v-for="item in menuList" :index="item.index" @click="routerPush(item.index)">{{item.label}}</ElMenuItem>
+          </ElMenu>
+          <EaButton plain class="theme" @click="handleChangeTheme">切换主题</EaButton>
         </template>
       </EaLayoutHeader>
     </div>
-    <div class="layoutsContainer" :class="{ noMenu: meta.menu === false }">
+    <div class="layoutsContainer" >
       <EaMenu :data :defaultImage v-if="meta.menu !== false"></EaMenu>
       <div class="layoutsContent">
         <EaLogs v-if="meta.logs !== false"></EaLogs>
@@ -20,11 +21,7 @@
     </div>
     <div class="waterFall">
       <template v-for="i in 10">
-        <div
-          v-for="j in 10"
-          class="waterFallItem"
-          :style="{ left: (i - 1) * 10 + '%', top: (j - 1) * 10 + '%' }"
-        >
+        <div v-for="j in 10" class="waterFallItem" :style="{ left: (i - 1) * 10 + '%', top: (j - 1) * 10 + '%' }">
           这是个水印
         </div>
       </template>
@@ -34,9 +31,12 @@
 
 <script setup lang="ts">
 import { RouterView, useRoute } from "vue-router";
-import { routes } from "../router/index.ts";
+import { ElMenu, ElMenuItem } from "element-plus";
+import router, { routes } from "../router/index.ts";
+import { watch } from "vue";
 
 const data: any[] = routes;
+console.log("🚀 ~ data:", data)
 
 const route = useRoute();
 
@@ -62,6 +62,25 @@ window.addEventListener("keydown", (e) => {
 });
 
 const defaultImage = "";
+
+let activeIndex = $ref('/')
+const routerPush = (to: string) => {
+  router.push(to);
+};
+watch(() => route.path, (newPath) => {
+  if (newPath === '/') {
+    activeIndex = '/';
+  } else if (newPath.includes('echarts')) {
+    activeIndex = 'echarts';
+  } else if (newPath.includes('word')) {
+    activeIndex = 'word';
+  }
+})
+let menuList = [
+  {label:'首页',index:'/',},
+  {label:'文档',index:'word',},
+  {label:'示例',index:'echarts',},
+]
 </script>
 
 <style lang="scss"></style>
@@ -74,7 +93,21 @@ const defaultImage = "";
   flex-direction: column;
 
   // color: var(--ea-text1);
-  .layoutsHead {}
+  .layoutsHead {
+    .el-menu-demo{
+      background: var(--ea-fill2);
+      height: 52px;
+      .el-menu-item{
+        &:hover{
+          color: var(--ea-primary-text) !important;
+        }
+      }
+      .is-active{
+        color: var(--ea-primary-text) !important;
+        border-bottom: 2px solid var(--ea-primary-text) !important;
+      }
+    }
+  }
 
   .layoutsContainer {
     display: flex;
@@ -82,17 +115,8 @@ const defaultImage = "";
     box-sizing: border-box;
     height: 100px;
     flex: 1 1 auto;
-    padding-left: 0;
-
-    &.noMenu {
-      padding: 0;
-      margin-top: 24px;
-
-      .layoutsContent {
-        .layoutsContentWrapper {
-          border: none;
-        }
-      }
+    .EaconComponentsMenuContainerOpen{
+      margin-left:0;
     }
 
     .layoutsContent {
@@ -108,9 +132,9 @@ const defaultImage = "";
       .layoutsContentWrapper {
         height: 100px;
         flex: 1 1 auto;
-        border-radius: 8px;
-        border: var(--ea-border);
-        border-color: var(--ea-line4);
+        // border-radius: 8px;
+        // border: var(--ea-border);
+        // border-color: var(--ea-line4);
         overflow: auto;
 
         &>div {

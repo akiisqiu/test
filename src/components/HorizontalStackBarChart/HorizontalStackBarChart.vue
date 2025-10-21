@@ -5,7 +5,7 @@ import Echarts from '../Echarts/Echarts.vue';
 
 import type { EChartsOption } from "echarts";
 import type { IYOption } from '../ChartHeader/ChartHeader.vue'
-import type { IExtendedYOption } from '../Echarts/Echarts.vue';
+import type { ISeriesOption } from '../Echarts/Echarts.vue';
 
 interface IProps {
     // 标题
@@ -15,15 +15,17 @@ interface IProps {
     // Y轴数据
     y: string[],
     //series 数据 
-    x: IExtendedYOption[],
+    x: ISeriesOption[],
     //单位
-    units?:string[],
+    units?:string,
     //tooltip
     tooltip?: IObject,
     //是否百分比
     percentage?: boolean,
     //X轴标签样式
     xAxisLabel?: boolean;
+    //主题色
+    theme?: string
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -68,26 +70,30 @@ const stackYData = $computed(() => {
 })
 
 const option = $computed(() => {
-    return {
+    //计算显示数据
+    let series: EChartsOption['series'] = [];
+    series = stackYData.map((item,idx)=>({
+        type: 'bar',
+        stack: 'total',
+        name:item.name,
+        data: item.data.length>0 ? item.data : [0],
+        color: props.colors[idx % props.colors.length],
+        barWidth:item.barWidth !== undefined && item.barWidth !== null
+            ? item.barWidth
+            : 12,
+        itemStyle: {
+            ...item.itemStyle,
+            borderWidth: 2,
+            borderRadius: item.itemStyle?.borderRadius !== undefined
+            ? item.itemStyle?.borderRadius   : 12                              
+        },
+        tooltip: item.tooltip,
+    }))
+    const options1: EChartsOption = {
         legend: {
             show: false
         },
         tooltip: {
-            trigger: "axis",
-            axisPointer: {
-                type: "shadow",
-                shadowStyle: {
-                    color: "rgba(255,255,255,0.05)",
-                }
-            },
-            className: "ChartsTooltip",
-            appendToBody: true,
-            confine: true,
-            backgroundColor: "rgba(0,0,0, .6)",
-            borderColor: "rgba(0,0,0)",
-            textStyle: {
-                color: "#fff",
-            },
             ...props.tooltip
         },
         grid: {
@@ -95,43 +101,29 @@ const option = $computed(() => {
             top: 12,
             right: 0,
             bottom: 0,
-            containLabel: true,
         },
         xAxis: {
+            type: "value",
             nameLocation:'start',
             max: props.percentage ? 100 : undefined,
             splitLine: {
                 show: false,
             },
-            axisLine: {
-                show: false,
-            },
             axisLabel: {
                 show:props.xAxisLabel,
                 margin: 0,
-                color: "#D2D2ED",
                 fontSize: 12,
                 lineHeight: 12,
                 alignMaxLabel: "right",
                 alignMinLabel: "left",
-            },
-            axisTick: {
-                show: false
             },
         },
         yAxis: {
             type: "category",
             data: props.y.length>0 ? props.y : ['-'],
             axisLabel: {
-                color: "#D2D2ED",
                 margin: 20,
                 fontSize: 12,
-            },
-            axisLine: {
-                show: false,
-            },
-            axisTick: {
-                show: false,
             },
         },
         graphic: {
@@ -148,22 +140,9 @@ const option = $computed(() => {
                 }
             ]
         },
-        series: stackYData.map((item,idx)=>({
-            type: 'bar',
-            stack: 'total',
-            name:item.name,
-            data: item.data.length>0 ? item.data : [0],
-            color: props.colors[idx % props.colors.length],
-            barWidth: item.barWidth !== undefined ? item.barWidth : 12,
-            itemStyle: {
-                ...item.itemStyle,
-                borderWidth: 2,
-                borderRadius: item.itemStyle?.borderRadius !== undefined
-                ? item.itemStyle?.borderRadius   : 12                              
-            },
-            tooltip: item.tooltip,
-        })),
-    } as EChartsOption
+        series
+    } 
+    return options1
 });
 const $emit = defineEmits(['clickEffective', 'clickZr'])
 // 点击事件
@@ -183,13 +162,17 @@ defineExpose({
 <template>
     <div class="EaconComponents EaconComponentsHorizontalStackBarChart">
         <chartHeader :title :y="x" :chart="chartInstance" :colors></chartHeader>
-        <Echarts class="EaconComponentsHorizontalStackBarChartComponent" id="HorizontalStackBarChart" ref="HorizontalStackBarChartComponent" :option  @clickEffective="clickEffective" @clickZr="clickZr"></Echarts>
+        <Echarts class="EaconComponentsHorizontalStackBarChartComponent" 
+            id="HorizontalStackBarChart" ref="HorizontalStackBarChartComponent" 
+            :option  @clickEffective="clickEffective" @clickZr="clickZr" :theme>
+        </Echarts>
     </div>
 </template>
 
 <style lang="scss" scoped>
 .EaconComponentsHorizontalStackBarChart {
     height: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 8px;

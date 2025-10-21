@@ -39,9 +39,8 @@ import {
 import * as echarts from "echarts";
 import type { ECElementEvent, ECharts, EChartsOption, SetOptionOpts } from "echarts";
 import { cloneDeep } from 'lodash-es'
-import remToPx from '../../utils/rem2px'
+import { remToPx } from '../../utils/rem2px'
 import { isRecord } from "../../utils/public";
-import type { IYOption } from "../ChartHeader/ChartHeader.vue";
 
 export type IProps = {
     option: EChartsOption;
@@ -49,10 +48,15 @@ export type IProps = {
     shoLoading?: boolean;
     //loading效果, Partial将所有属性转为可选属性
     loadingOptions?: Partial<typeof defaultLoadingOptions>,
+    //主题切换
+    theme?: string;
 };
 
-export interface IExtendedYOption extends IYOption {
+// 自定义Series配置
+export interface ISeriesOption {
     type?: 'line' | 'bar' | 'stackBar';
+    name: string;
+    data: number[]
     //bar图配置
     barWidth?: number | null;
     barMinWidth?: number;
@@ -73,19 +77,22 @@ const props = withDefaults(defineProps<IProps>(), {
     shoLoading: false,
     loadingOptions: () => {
         return { ...defaultLoadingOptions }
-    }
+    },
+    theme:'dark'
 });
+
 
 const emit = defineEmits<{
     (e: 'clickEffective', params: ECElementEvent): void;
     (e: 'clickZr', params: ECElementEvent): void;
-    (e: 'legendSelectChanged', params: any): void;
+    (e: 'legendSelectChanged', params: Record<string, boolean> | null): void;
 }>()
 // 组件实例
 const component = useTemplateRef("componentRef");
 
 // 图表实例
 let chart: ECharts | null = $shallowRef(null);
+let resizeObserver: ResizeObserver | null = null;
 
 let i = $ref(0)
 //转换数组 过滤转换rem
@@ -129,9 +136,10 @@ const resultOption = $computed<EChartsOption>(() => {
     return newOption;
 });
 
+
 const init = () => {
     if (!component.value) return;
-    chart = echarts.init(component.value);
+    chart = echarts.init(component.value, props.theme);
     // 整体点击
     chart.on('click', function (params: ECElementEvent) {
         emit('clickEffective', params)
@@ -144,12 +152,19 @@ const init = () => {
     chart.on('legendselectchanged', function () {
         if (!chart) return;
         const option = chart.getOption();
-        const selected = Array.isArray(option.legend) ? option.legend[0].selected : null;
+        const selected:Record<string,boolean>= Array.isArray(option.legend) &&  option.legend[0].selected 
         //selected 为当前图例选中状态
         emit('legendSelectChanged',selected)
     });
     //加载loading效果与否
     addChartLoading('default', props.loadingOptions, props.shoLoading)
+    if (resizeObserver) {
+        resizeObserver.disconnect();
+    }
+    resizeObserver = new ResizeObserver(() => {
+        chart?.resize();
+    });
+    resizeObserver.observe(component.value);
     // 配置option
     setOption(resultOption);
 };
@@ -175,11 +190,16 @@ onMounted(() => {
     })
 })
 
+
 onBeforeUnmount(() => {
     window.removeEventListener("resize", resize);
     if (chart) {
         chart.dispose();
         chart = null;
+    }
+    if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserver = null;
     }
 });
 const setOption = (option: EChartsOption, config?: SetOptionOpts) => {
@@ -190,12 +210,33 @@ const setOption = (option: EChartsOption, config?: SetOptionOpts) => {
 watch(
     () => resultOption,
     () => {
-        setOption(resultOption, { notMerge: true })
+        setOption(resultOption,  {
+            notMerge: false,
+            replaceMerge: ['series']   // 只替换 series，其它配置保留
+        })
     },
     {
         deep: true,
     }
 );
+
+//监听主题色切换
+watch(
+    () => props.theme,
+    () => {
+        // 销毁echarts实例
+        if (chart) {
+            chart.dispose();
+            chart = null;
+        }
+        // 初始化echarts实例
+        init();
+    },
+    {
+        deep: true,
+    }
+);
+
 
 defineExpose({
     component,

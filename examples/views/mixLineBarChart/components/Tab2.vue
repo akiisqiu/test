@@ -1,10 +1,11 @@
 <!-- 基础混合图 -->
 <template>
-    <EaMixLineBarChart v-bind="chartOption"></EaMixLineBarChart>
+    <EaMixLineBarChart v-bind="chartOption" :theme></EaMixLineBarChart>
 </template>
 
 <script lang='ts' setup>
-import { ref } from "vue";
+import { onBeforeUnmount, ref } from "vue";
+
 const chartOption = ref({
     title: "基础混合图",
     x: ["08-15", "08-16", "08-17", "08-18", "08-19"],
@@ -35,6 +36,12 @@ const chartOption = ref({
     units:["单位：h"],
     doubleY: true
 })
+let theme = ref(localStorage.getItem("theme") || "white");
+const changeTheme = (e: string) => {
+    theme.value = e;
+};
+window.changeTheme.add(changeTheme);
+onBeforeUnmount(() => window.changeTheme.delete(changeTheme));
 </script>
 
 <style scoped>

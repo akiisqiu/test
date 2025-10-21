@@ -151,6 +151,7 @@ const clickY = (item:String) => {
 .EaconComponentsLoopHorizontalBarChart {
     display: flex;
     height: 100%;
+    width: 100%;
     flex-direction: column;
     user-select: none;
 
@@ -189,7 +190,7 @@ const clickY = (item:String) => {
             align-items: center;
             height: 100%;
             width: 100%;
-            color: #D2D2ED;
+            color: var(--ea-text2);
             font-size: .88rem;
             gap: .5rem;
             cursor: pointer;

@@ -21,7 +21,7 @@ window.addEventListener('resize', function () {
 
 const uiH = 1080;
 const uiW = 1920;
-export default function remToPx(remValue: unknown) {
+export default function remToPx(remValue: unknown): unknown  {
     if (typeof remValue !== 'number') {
         return remValue
     }
@@ -31,3 +31,5 @@ export default function remToPx(remValue: unknown) {
     return remValue * nowSize;
 
 }
+
+export { remToPx }

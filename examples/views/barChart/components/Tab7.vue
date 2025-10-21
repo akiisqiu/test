@@ -1,6 +1,6 @@
 <template>
     <EaBarChart v-bind="chartOption" @clickEffective="clickEffective" @clickZr="clickZr"
-        ref="component" ></EaBarChart>
+        ref="component" :theme></EaBarChart>
 </template>
 <script setup >
 import { nextTick, onBeforeUnmount, useTemplateRef,ref } from 'vue';
@@ -128,9 +128,17 @@ const clickZr = (params) => {
         chartClickTarget = null;
     }, 0);
 }
+
+let theme = ref(localStorage.getItem("theme") || "white");
+const changeTheme = (e) => {
+    theme.value = e;
+};
+window.changeTheme.add(changeTheme);
+
 //监听页面点击触发handleClickMode
 document.addEventListener('click', handleClickMode);
 onBeforeUnmount(() => {
+    window.changeTheme.delete(changeTheme)
     document.removeEventListener('click', handleClickMode);
 })
 </script>

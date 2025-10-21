@@ -10,6 +10,8 @@ import ComparisonTips from './ComparisonTips/ComparisonTips.vue'
 import LineChart from './LineChart/LineChart.vue'
 import LargeScaleLineChart from './LargeScaleLineChart/LargeScaleLineChart.vue'
 import MixLineBarChart from './MixLineBarChart/MixLineBarChart.vue'
+import Gauge from './Gauge/Gauge.vue'
+import Pie from './Pie/Pie.vue'
 
 export {
     Echarts,
@@ -23,5 +25,7 @@ export {
     ComparisonTips,
     LineChart,
     LargeScaleLineChart,
-    MixLineBarChart
+    MixLineBarChart,
+    Gauge,
+    Pie
 }

@@ -10,19 +10,19 @@
                         <div class="chartLegendItem" v-for="(item, idx) in y" :key="idx" :class="{ hidden: hidden.has(item.name), opacity: idx >= showY }" @click="handleChangeLegend(item)">
                             <div v-if="!item.itemType || item.itemType === 'bar'" class="chartLegendItemMark" :class="item.itemType" :style="{ background: colors[idx], borderColor: colors[idx] }"></div>
                             <div v-else-if="item.itemType === 'line'" class="chartLegendItemMark" :class="item.itemType" :style="{ color: colors[idx] }">
-                                <EaIcon type="icon-zhexiantuli"></EaIcon>
+                                <Icon type="icon-zhexiantuli"></Icon>
                             </div>
                             {{ item.name }}
                         </div>
                     </div>
-                    <EaIcon v-show="showMore" class="chartLegendMore" type="icon-more"></EaIcon>
+                    <Icon v-show="showMore" class="chartLegendMore" type="icon-more"></Icon>
                 </div>
             </template>
             <div class="chartLegend" :style="{ 'grid-template-columns': `repeat(${columns}, 1fr)` }">
                 <div class="chartLegendItem" v-for="(item, idx) in y" :key="idx" :class="{ hidden: hidden.has(item.name) }" @click="handleChangeLegend(item)">
                     <div v-if="!item.itemType || item.itemType === 'bar'" class="chartLegendItemMark" :class="item.itemType" :style="{ background: colors[idx], borderColor: colors[idx] }"></div>
                     <div v-else-if="item.itemType === 'line'" class="chartLegendItemMark" :class="item.itemType" :style="{ color: colors[idx] }">
-                        <EaIcon type="icon-zhexiantuli"></EaIcon>
+                        <Icon type="icon-zhexiantuli"></Icon>
                     </div>
                     <div class="chartLegendItemLabel">{{ item.name }}</div>
                 </div>
@@ -35,7 +35,8 @@
 import { useTemplateRef, nextTick, onBeforeUnmount, watch } from 'vue'
 import { ElPopover } from "element-plus";
 import type { ECharts } from "echarts";
-import { getTextWidth } from 'eacon-components' 
+import Icon from "../Icon/Icon.vue"
+import { getTextWidth } from "../../utils/dom";
 
 export interface IYOption {
     itemType?: 'bar' | 'line'
@@ -84,9 +85,10 @@ const computedContent = () => {
     const htmlElement = document.querySelector('html');
     const fz = htmlElement ? parseFloat(htmlElement.style.fontSize || '16') : 16;
 
-    const dom = chartLegend?.value
+    const dom = chartLegend?.value 
+    if (!dom) return
     const domWidth = ~~(dom.offsetWidth)
-    const children = [...(dom.children ?? [])]
+    const children = [...(dom.children ?? [])] as HTMLDivElement[]
     const childrenWidths = children.map((i) => i.offsetWidth)
     const allChildrenWidth = childrenWidths.reduce((l, i) => l + i, 0)
 
@@ -97,6 +99,7 @@ const computedContent = () => {
 
     nextTick(() => {
         const dom = chartLegend?.value
+        if (!dom) return
         const domWidth = ~~(dom.offsetWidth)
         let n = 0
         showY = childrenWidths.findIndex((item, idx) => {
@@ -228,7 +231,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', bindResize))
         gap: 0.4rem;
         cursor: pointer;
         user-select: none;
-        color: #D2D2ED;
+        color: var(--ea-text2);
         font-size: 0.75rem;
         flex: 0 0 auto;
         padding-right: .8rem;

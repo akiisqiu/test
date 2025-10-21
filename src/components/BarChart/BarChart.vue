@@ -4,10 +4,25 @@ import ChartHeader from '../ChartHeader/ChartHeader.vue';
 import Echarts from '../Echarts/Echarts.vue';
 
 import type { EChartsOption } from "echarts";
-import type { IExtendedYOption } from '../Echarts/Echarts.vue';
-import type { YAXisOption } from "echarts/types/dist/shared";
+import type { ISeriesOption } from '../Echarts/Echarts.vue';
 import { getBarSeries,createBaseY } from '../Echarts/ChartConfig'
+import { getYAxisMax } from  '../../utils/chart.ts'
 
+
+// x、y坐标轴标签样式
+export interface AxisLabel {
+    interval: 'auto' | number | ((index: number, value: string) => boolean)
+    // 旋转的角度
+    rotate: number;
+    // 刻度标签与轴线之间的距离。
+    margin: number;
+    // 刻度标签的内容格式器，支持字符串模板和回调函数两种形式。
+    formatter: string | ((value: string, index: number, extra: unknown) => string);
+    // 显示最小标签
+    showMinLabel: boolean
+    // 显示最大标签
+    showMaxLabel: boolean
+}
 
 interface IProps {
     // 标题
@@ -17,15 +32,19 @@ interface IProps {
     // x轴数据
     x: string[],
     //series 数据 
-    y: IExtendedYOption[],
+    y: ISeriesOption[],
     //单位
     units?: string[],
     //tooltip
-    tooltip?: IObject,
+    tooltip?: Record<string, unknown>,
     //是否双y轴
     doubleY?: boolean,
     //X轴标签样式
-    XAxisLabel?: IObject<any>;
+    XAxisLabel?: AxisLabel;
+    //是否显示图例
+    showLegend?: boolean,
+    //主题色
+    theme?: string
 }
 
 const props = withDefaults(defineProps<IProps>(), {
@@ -33,7 +52,26 @@ const props = withDefaults(defineProps<IProps>(), {
     y: () => [],
     colors: () => [],
     doubleY: false,
+    showLegend:true
 })
+
+//header配置
+const headerY = $computed(() => { 
+    if (props.showLegend) {
+        return props.y.map(item =>({
+            ...item,
+        }))
+    } else return []
+})
+const headerColors = $computed(() => {
+    if (!props.colors || !props.y) return [];
+    const colors: string[] = [];
+    const len = props.colors.length;
+    props.y.forEach((_, i) => {
+        colors.push(props.colors[i % len]); 
+    });
+    return colors;
+});
 
 
 const barChart = useTemplateRef<any>('BarChartComponent')
@@ -42,9 +80,9 @@ const chartInstance = $computed(() => barChart.value?.chart)
 
 const option = $computed(() => {
     //计算显示数据
-    const series: Array<EChartsOption['series']> = []
+    const series: EChartsOption['series'] = [];
     props.y.forEach((item, index) => {
-        const result = getBarSeries(item, index, props)
+        const result = getBarSeries(item, index, props.doubleY,props.colors)
         series.push(result)
     })
 
@@ -59,110 +97,47 @@ const option = $computed(() => {
     } else {
         resultY = createBaseY()
     }
-    return {
+    const options1: EChartsOption = {
         legend: {
             show: false
         },
         tooltip: {
-            trigger: "axis",
-            axisPointer: {
-                type: "shadow",
-                shadowStyle: {
-                    color: "rgba(255,255,255,0.05)",
-                }
-            },
-            className: "ChartsTooltip",
-            appendToBody: true,
-            confine: true,
-            backgroundColor: "rgba(0,0,0, .6)",
-            borderColor: "rgba(0,0,0)",
-            textStyle: {
-                color: "#fff",
-            },
             ...props.tooltip
         },
         grid: {
-            left: 3,
-            top: 12,
+            left: 0,
+            top: 10,
             right: 0,
             bottom: 0,
-            containLabel: true,
         },
         xAxis: {
             data: props.x.length>0 ? props.x : ['-'],
             type: 'category',
-            splitLine: {
-                show: false,
-            },
-            axisLine: {
-                show: false,
-            },
             axisLabel: {
-                color: "#D2D2ED",
                 fontSize: 12,
                 lineHeight: 12,
                 ...props.XAxisLabel
             },
-            axisTick: {
-                show: false
-            }
         },
         yAxis: resultY,
         series,
-    } as EChartsOption
+    } 
+    return options1
 });
 
-
-
-// 主动获取Y轴最大值的工具函数
-const getYAxisMax = async () => {
+onMounted(async() => {
     await nextTick()
-    if (!barChart.value.chart) return;
-    const formatter = function(value: number, max: number) {
-        if(value === 0) return value
-        if (max >= 1e8) { 
-            return (value / 1e8) + '亿';
-        } else if (max >= 1e4) {
-            return (value / 1e4) + '万';
-        }
-        return value;
-    };
-
-    if(!props.doubleY){
-        // 获取Y轴模型
-        const yAxisModel = barChart.value.chart.getModel().getComponent('yAxis', 0);
-        //  获取轴的范围（[min, max]），取第二个值为最大值
-        const [_, max] = yAxisModel.axis.scale.getExtent();
-        barChart.value.chart.setOption({
-            yAxis: {
-                axisLabel: { formatter: (value: number) => formatter(value, max)}
-            }
-        });
-    } else {
-        const yAxis0Model = barChart.value.chart.getModel().getComponent('yAxis', 0);
-        const yAxis1Model = barChart.value.chart.getModel().getComponent('yAxis', 1);
-        const [_, max0] = yAxis0Model.axis.scale.getExtent();
-        const [__, max1] = yAxis1Model.axis.scale.getExtent();
-        barChart.value.chart.setOption({
-            yAxis: [
-                { axisLabel: { formatter: (value: number) => formatter(value, max0) } }, // 第0个Y轴
-                { axisLabel: { formatter: (value: number) => formatter(value, max1) } }  // 第1个Y轴
-            ]
-        });
-    }
-};
-
-onMounted(() => {
-    getYAxisMax();
+    getYAxisMax(barChart.value.chart, props.doubleY);
 });
 
 watch(
-    () => option,
+    () => [option,props.theme],
     () => {
         // 配置更新后延迟获取
-        getYAxisMax()
+        getYAxisMax(barChart.value.chart, props.doubleY);
     }
 );
+
 
 const $emit = defineEmits(['clickEffective', 'clickZr','legendSelectChanged'])
 // 点击事件
@@ -174,7 +149,7 @@ const clickZr = (params: any) => {
 }
 //图例勾选
 const legendSelectChanged = (params: any)=>{
-    getYAxisMax()
+    getYAxisMax(barChart.value.chart, props.doubleY);
     $emit('legendSelectChanged',params)
 }
 defineExpose({
@@ -185,20 +160,21 @@ defineExpose({
 
 <template>
     <div class="EaconComponents EaconComponentsBarChart">
-        <chartHeader :title :y :chart="chartInstance" :colors></chartHeader>
+        <chartHeader :title :y="headerY" :chart="chartInstance" :colors="headerColors"></chartHeader>
         <div class="EaconComponentsBarChartUnit">
             <div v-for="item in units" class="EaconComponentsBarChartUnitItem">
                 {{ item }}
             </div>
         </div>
-        <Echarts class="EaconComponentsBarChartComponent" id="BarChart" ref="BarChartComponent" :option
-            @clickEffective="clickEffective" @clickZr="clickZr" @legendSelectChanged="legendSelectChanged"></Echarts>
+        <Echarts class="EaconComponentsBarChartComponent" id="BarChart" ref="BarChartComponent" :option :theme
+            @clickEffective="clickEffective" @clickZr="clickZr" @legendSelectChanged="legendSelectChanged" ></Echarts>
     </div>
 </template>
 
 <style lang="scss" scoped>
 .EaconComponentsBarChart {
     height: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -206,7 +182,7 @@ defineExpose({
     .EaconComponentsBarChartUnit {
         display: flex;
         justify-content: space-between;
-        color: #D2D2ED;
+        color: var(--ea-text2);
         font-size: .75rem;
     }
 
@@ -214,4 +190,7 @@ defineExpose({
         height: 1%;
         flex: 1 1 auto;    }
 }
+</style>
+<style lange="scss">
+
 </style>

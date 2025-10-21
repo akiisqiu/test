@@ -1,6 +1,8 @@
 import * as components from './components/index.ts'
 
 import type { App, Plugin } from "vue";
+import "./assets/iconfont2.js";
+import "./assets/iconfont.js";
 
 type name = keyof typeof components;
 

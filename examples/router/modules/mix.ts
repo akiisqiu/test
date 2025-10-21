@@ -1,15 +1,15 @@
 import layouts from '@/layouts/layouts.vue'
 export default {
-    path: '/mix',
+    path: '/echarts/mixLineBarChart',
     name: 'mix',
-    redirect: '/mixChart',
+    redirect: '/echarts/mixLineBarChart',
     component: layouts,
     meta: {
         title: '混合图',
     },
     children: [
         {
-            path: '/mixLineBarChart',
+            path: '/echarts/mixLineBarChart',
             name: 'mixLineBarChart',
             component: () => import('@/views/mixLineBarChart/mixLineBarChart.vue'),
             meta: {

@@ -4,8 +4,8 @@ import ChartHeader from '../ChartHeader/ChartHeader.vue';
 import Echarts from '../Echarts/Echarts.vue';
 
 import type { EChartsOption } from "echarts";
-import type { IYOption } from '../ChartHeader/ChartHeader.vue'
-import type { IExtendedYOption } from '../Echarts/Echarts.vue';
+import type { ISeriesOption } from '../Echarts/Echarts.vue';
+import { getYAxisMax } from  '../../utils/chart.ts'
 
 interface IProps {
     // 标题
@@ -15,7 +15,7 @@ interface IProps {
     // x轴数据
     x: string[],
     //series 数据 
-    y: IExtendedYOption[],
+    y: ISeriesOption[],
     //单位
     units?:string[],
     //tooltip
@@ -25,14 +25,37 @@ interface IProps {
     //X轴标签样式
     XAxisLabel?: IObject<any>;
     //其他数据传入
-    anotherData?: IObject,
+    anotherData?: IObject;
+    //是否显示图例
+    showLegend?: boolean;
+    //主题色
+    theme?: string;
 }
 
 const props = withDefaults(defineProps<IProps>(), {
     x: () => [],
     y: () => [],
     colors: () => [],
+    showLegend:true
 })
+
+//header配置
+const headerY = $computed(() => { 
+    if (props.showLegend) {
+        return props.y.map(item =>({
+            ...item,
+        }))
+    } else return []
+})
+const headerColors = $computed(() => {
+    if (!props.colors || !props.y) return [];
+    const colors: string[] = [];
+    const len = props.colors.length;
+    props.y.forEach((_, i) => {
+        colors.push(props.colors[i % len]); 
+    });
+    return colors;
+});
 
 const stackBarChart = useTemplateRef<any>('StackBarChartComponent')
 const chartInstance = $computed(() => stackBarChart.value?.chart)
@@ -67,27 +90,28 @@ const stackYData = $computed(() => {
     })
     return stackData
 })
-const option = $computed(() => {
-    return {
+const option = $computed<EChartsOption>(() => {
+    let series: EChartsOption['series'] = [];
+    series = stackYData.map((item, idx) => ({
+        type: 'bar',
+        stack: 'total',
+        name: item.name,
+        data: item.data.length>0 ? item.data : [0],
+        color: props.colors[idx % props.colors.length],
+        barWidth: item.barWidth === null ? 'undefined' : (item.barWidth !== undefined ? item.barWidth : 12),
+        itemStyle: {
+            ...item.itemStyle,
+            borderWidth: 2,
+            borderRadius: item.itemStyle?.borderRadius !== undefined
+                ? item.itemStyle?.borderRadius : 12
+        },
+        tooltip: item.tooltip,
+    }))
+    const options1: EChartsOption = {
         legend: {
             show: false
         },
         tooltip: {
-            trigger: "axis",
-            axisPointer: {
-                type: "shadow",
-                shadowStyle: {
-                    color: "rgba(255,255,255,0.05)",
-                }
-            },
-            className: "ChartsTooltip",
-            appendToBody: true,
-            confine: true,
-            backgroundColor: "rgba(0,0,0, .6)",
-            borderColor: "rgba(0,0,0)",
-            textStyle: {
-                color: "#fff",
-            },
             ...props.tooltip
         },
         grid: {
@@ -95,97 +119,39 @@ const option = $computed(() => {
             top: 12,
             right: 0,
             bottom: 0,
-            containLabel: true,
         },
         xAxis: {
+            type: "category",
             data: props.x.length>0 ? props.x : ['-'],
-            splitLine: {
-                show: false,
-            },
-            axisLine: {
-                show: false,
-            },
             axisLabel: {
-                color: "#D2D2ED",
                 fontSize: 12,
                 lineHeight: 12,
                 ...props.XAxisLabel
             },
-            axisTick: {
-                show: false
-            }
         },
         yAxis: {
             type: 'value',
             axisLabel: {
-                color: "#D2D2ED",
                 fontSize: 12,
-            },
-            splitLine: {
-                lineStyle: {
-                    color: 'rgba(255,255,255,.04)'
-                }
-            },
-            axisLine: {
-            },
-            axisTick: {
-                show: false
             },
             max: props.percentage ? 100 : undefined,
         },
-        series: stackYData.map((item, idx) => ({
-            type: 'bar',
-            stack: 'total',
-            name: item.name,
-            data: item.data.length>0 ? item.data : [0],
-            color: props.colors[idx % props.colors.length],
-            barWidth: item.barWidth !== undefined ? item.barWidth : 12,
-            itemStyle: {
-                ...item.itemStyle,
-                borderWidth: 2,
-                borderRadius: item.itemStyle?.borderRadius !== undefined
-                    ? item.itemStyle?.borderRadius : 12
-            },
-            tooltip: item.tooltip,
-        })),
-    } as EChartsOption
+        series
+    }
+    return options1
 });
 
 
-// 主动获取Y轴最大值的工具函数
-const getYAxisMax = async () => {
+onMounted(async() => {
     await nextTick()
-    if (!stackBarChart.value.chart) return;
-    const formatter = function(value: number, max: number) {
-        if(value === 0) return value
-        if (max >= 1e8) { 
-            return (value / 1e8) + '亿';
-        } else if (max >= 1e4) {
-            return (value / 1e4) + '万';
-        }
-        return value;
-    };
-
-    // 获取Y轴模型
-    const yAxisModel = stackBarChart.value.chart.getModel().getComponent('yAxis', 0);
-    //  获取轴的范围（[min, max]），取第二个值为最大值
-    const [_, max] = yAxisModel.axis.scale.getExtent();
-    stackBarChart.value.chart.setOption({
-        yAxis: {
-            axisLabel: { formatter: (value: number) => formatter(value, max)}
-        }
-    });
-};
-
-onMounted(() => {
-    getYAxisMax();
+    getYAxisMax(stackBarChart.value.chart, props.doubleY);
 });
 
 watch(
-    () => option,
+    () => [option,props.theme],
     () => {
         // 配置更新后延迟获取
-        getYAxisMax()
+        getYAxisMax(stackBarChart.value.chart, props.doubleY);
     }
 );
 
@@ -199,7 +165,7 @@ const clickZr = (params: any) => {
 }
 //图例勾选
 const legendSelectChanged = (params: any)=>{
-    getYAxisMax()
+    getYAxisMax(stackBarChart.value.chart, props.doubleY);
     $emit('legendSelectChanged',params)
 }
 defineExpose({
@@ -209,20 +175,21 @@ defineExpose({
 
 <template>
     <div class="EaconComponents EaconComponentsStackBarChart">
-        <chartHeader :title :y :chart="chartInstance" :colors></chartHeader>
+        <chartHeader :title :y="headerY" :chart="chartInstance" :colors="headerColors"></chartHeader>
         <div class="EaconComponentsStackBarChartUnit">
             <div v-for="item in units" class="EaconComponentsStackBarChartUnitItem">
                 {{ item }}
             </div>
         </div>
         <Echarts class="EaconComponentsStackBarChartComponent" id="StackBarChart" ref="StackBarChartComponent" :option
-            @clickEffective="clickEffective" @clickZr="clickZr" @legendSelectChanged="legendSelectChanged"></Echarts>
+            @clickEffective="clickEffective" @clickZr="clickZr" @legendSelectChanged="legendSelectChanged" :theme></Echarts>
     </div>
 </template>
 
 <style lang="scss" scoped>
 .EaconComponentsStackBarChart {
     height: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -230,7 +197,7 @@ defineExpose({
     .EaconComponentsStackBarChartUnit {
         display: flex;
         justify-content: space-between;
-        color: #D2D2ED;
+        color: var(--ea-text2);
         font-size: .75rem;
     }
 

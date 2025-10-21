@@ -1,10 +1,10 @@
 <!-- 基础折线图 -->
 <template>
-    <EaLineChart v-bind="chartOption"></EaLineChart>
+    <EaLineChart v-bind="chartOption" :theme></EaLineChart>
 </template>
 
 <script lang='ts' setup>
-import { ref } from "vue";
+import { onBeforeUnmount, ref } from "vue";
 
 const chartOption = ref({
     title: "基础折线图",
@@ -30,6 +30,13 @@ const chartOption = ref({
     ],
     units:["单位：h"]
 })
+
+let theme = ref(localStorage.getItem("theme") || "white");
+const changeTheme = (e: string) => {
+    theme.value = e;
+};
+window.changeTheme.add(changeTheme);
+onBeforeUnmount(() => window.changeTheme.delete(changeTheme));
 </script>
 
 <style scoped>

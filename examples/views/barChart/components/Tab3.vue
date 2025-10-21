@@ -1,10 +1,10 @@
 <!-- 柱状图自定义 -->
 <template>
-    <EaBarChart v-bind="chartOption"></EaBarChart>
+    <EaBarChart v-bind="chartOption" :theme></EaBarChart>
 </template>
 
 <script lang='ts' setup>
-import { ref } from "vue";
+import { onBeforeUnmount, ref } from "vue";
 
 const chartOption = ref({
     title: "基础柱状图-柱状图自定义",
@@ -66,6 +66,13 @@ const chartOption = ref({
         }
     }
 })
+
+let theme = ref(localStorage.getItem("theme") || "white");
+const changeTheme = (e: string) => {
+    theme.value = e;
+};
+window.changeTheme.add(changeTheme);
+onBeforeUnmount(() => window.changeTheme.delete(changeTheme));
 </script>
 
 <style scoped>
