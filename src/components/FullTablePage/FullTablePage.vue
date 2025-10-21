@@ -6,12 +6,12 @@
             class="EaconComponentsTablePageWithCurdTabs"
         >
             <PageTabs
-            ref="tabsComponent"
-            v-model="activeTab"
-            :options="tabOptions"
-            scrollIntoView
-            :disabled="drawerAttrs?.disabledPageTab"
-            @change="handleChangeTab"
+                ref="tabsComponent"
+                v-model="activeTab"
+                :options="tabOptions"
+                scrollIntoView
+                :disabled="drawerAttrs?.disabledPageTab"
+                @change="handleChangeTab"
             ></PageTabs>
         </div>
 
@@ -80,12 +80,12 @@
 <script setup >
 import { onMounted, ref,watch,reactive,computed, markRaw  } from 'vue';
 
-import Query from './Query.vue';
-import EaTable from './Table.vue'
-import Pagination from './Pagination.vue'
-import Text from './Text.vue'
-import PageTabs from './PageTabs.vue';
-import { getTextWidth } from "./dom";
+import Query from '../Query/Query.vue';
+import EaTable from '../Table/Table.vue'
+import Pagination from '../Pagination/Pagination.vue'
+import Text from '../Text/Text.vue'
+import PageTabs from '../PageTabs/PageTabs.vue';
+import { getTextWidth } from "../dom";
 
 /**
  * 表格配置参数

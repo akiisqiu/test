@@ -56,7 +56,7 @@
 
 <script setup>
 import { ref, computed, mergeProps } from "vue";
-import { getTextWidth } from "./dom";
+import { getTextWidth } from "../dom";
 
 import TableColumn from "./TableColumn.vue";
 

@@ -29,7 +29,7 @@
 
 import { computed, ref } from "vue";
 
-import Form from "./Form.vue";
+import Form from "../Form/Form.vue";
 
 const props = defineProps({
     // 表单配置

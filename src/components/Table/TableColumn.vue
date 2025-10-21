@@ -59,7 +59,7 @@
 
 <script setup >
 import { computed, ref } from 'vue';
-import { getTextWidth } from "./dom";
+import { getTextWidth } from "../dom";
 
 /**
  * 表格列

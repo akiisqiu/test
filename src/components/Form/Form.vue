@@ -39,8 +39,8 @@
 
 <script setup >
 import { computed, ref ,watch,nextTick, provide} from 'vue';
-import { getTextWidth } from "./dom";
-import {defaultPlaceholder,findRequiredRules,setRequiredMessageToConfigs} from './form'
+import { getTextWidth } from "../dom";
+import {defaultPlaceholder,findRequiredRules,setRequiredMessageToConfigs} from '../form'
 
 
 

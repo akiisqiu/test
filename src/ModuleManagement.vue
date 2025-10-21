@@ -20,7 +20,7 @@
 </template>
 
 <script setup name="ModuleManagement">
-import FullTablePage from './component/FullTablePage.vue'
+import FullTablePage from './component/FullTablePage/FullTablePage.vue'
 //配置表头
 const getTableOptions = () => {
     return {
@@ -74,6 +74,20 @@ const getTableData = (params) => {
     return rain
 }
 
+//特殊按钮
+const tableButtons = [
+    "put",
+    {
+        label:"复制",
+        show(row) {
+            return true
+        },
+        async buttonClickEvent(row) {
+        }
+    },
+    "delete",
+]
+
 const tabOptions = [
     {   
         label: "配置模块管理",
@@ -87,20 +101,19 @@ const tabOptions = [
         getTableOptions,
         // 表格数据
         getTableData,
+        //特殊按钮
+        tableButtons,
+        //详情数据
         async getDetailData(row) {
-            console.log("🚀 ~ row:", row)
             return { ...row }
         },
-        // 是否显示新增 编辑 删除
-        // hasPostRole() {
-        //     return false;
-        // },
-        // hasPutRole() {
-        //     return false;
-        // },
-        // hasDeleteRole() {
-        //     return false;
-        // },
+        //是否显示编辑 删除
+        hasPutRole() {
+            return true;
+        },
+        hasDeleteRole() {
+            return true;
+        },
     }
 ]
 
