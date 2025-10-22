@@ -52,6 +52,10 @@ const props = defineProps({
         default: true,
     },
     debug: Boolean,
+    columns:{
+        type: Number,
+        default: 2
+    }
 });
 
 const emit = defineEmits(["linkage", "nextTick"]);
@@ -70,7 +74,7 @@ const computedLabelWidth = () => {
     nextTick(() => {
         const arr = props.options.map?.((item) => getTextWidth(item.label, "16px"));
         let max = Math.max(...arr);
-        labelWidth.value = max + 12;
+        labelWidth.value = max + 16;
     });
 };
 watch(() => [props.options], computedLabelWidth, {
@@ -232,11 +236,11 @@ defineExpose({
 
 
 <style lang="scss" scoped>
-
 .custom-form {
-    display: flex;
+    display: grid;
     flex-wrap: wrap;
     align-items: flex-end;
+    grid-template-columns: repeat(v-bind(columns), 1fr);
 
     .form-buttons {
         margin-left: auto;

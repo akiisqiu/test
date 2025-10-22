@@ -16,6 +16,7 @@
             scrollbar-always-on
             v-bind="mergeProps($attrs, props)"
             :options="undefined"
+            @selection-change="handleSelectionChange"
         >
             <!--多选-->
             <el-table-column type="selection" v-if="selection && options?.length"  :width="80" />
@@ -72,9 +73,11 @@ const props = defineProps({
     autoComputeWidth: { type: Boolean },
 });
 
-const componentRef = ref(null);
-
-
+const emit = defineEmits(["selectionChange"]);
+//表格多选
+const handleSelectionChange = (selection) => {
+    emit("selectionChange", selection);
+};
 const tableRowClassName = (scope) => {
     if (scope.rowIndex === props.activeIdx) return "active-row";
     return ''
@@ -83,6 +86,8 @@ const computeWidths = computed(() => {
     if (!props.autoComputeWidth) return [];
     return props.options.map((i) => getTextWidth(i.label, "14px", "600"));
 });
+
+const componentRef = ref(null);
 defineExpose({
     componentRef,
 });

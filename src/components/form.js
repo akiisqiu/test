@@ -1,18 +1,18 @@
 
 export const defaultPlaceholder = {
-    "ea-input": "请输入",
-    "ea-input-number": "请输入",
-    "ea-autocomplete": "请输入",
+    "el-input": "请输入",
+    "el-input-number": "请输入",
+    "el-autocomplete": "请输入",
 
-    "ea-select": "请选择",
-    "ea-time-picker": "请选择",
-    "ea-date-picker": "请选择",
-    "ea-upload": "请选择",
-    "ea-tree-select": "请选择",
-    "ea-org-tree-select": "请选择",
-    "ea-radio-group": "请选择",
-    "ea-checkbox-group": "请选择",
-    "ea-cascader": "请选择",
+    "el-select": "请选择",
+    "el-time-picker": "请选择",
+    "el-date-picker": "请选择",
+    "el-upload": "请选择",
+    "el-tree-select": "请选择",
+    "el-org-tree-select": "请选择",
+    "el-radio-group": "请选择",
+    "el-checkbox-group": "请选择",
+    "el-cascader": "请选择",
 };
     
     

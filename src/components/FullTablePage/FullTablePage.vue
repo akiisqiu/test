@@ -10,7 +10,7 @@
                 v-model="activeTab"
                 :options="tabOptions"
                 scrollIntoView
-                :disabled="drawerAttrs?.disabledPageTab"
+                :disabled="dialogAttrs?.disabledPageTab"
                 @change="handleChangeTab"
             ></PageTabs>
         </div>
@@ -46,6 +46,7 @@
                         :data="tableData" 
                         :autoComputeWidth
                         :loading
+                        @selectionChange="selectionChange"
                     >
                         <template #operator="scope">
                             <div class="EaconComponentsTablePageWithCurdTableButtons">
@@ -62,31 +63,45 @@
                                 </div>
                         </template>
                     </EaTable>
+                    <!-- 分页 -->
+                    <Pagination
+                        v-if="activeTab?.pagination !== false" 
+                        ref="paginationComponent"
+                        :total
+                        v-model:page-size="pageSize"
+                        v-model:current-page="currentPage"
+                        @change="handlePageChange"
+                    ></Pagination>
                 </div>
-                <!-- 分页 -->
-                <Pagination
-                    v-if="activeTab?.pagination !== false" 
-                    ref="paginationComponent"
-                    :total
-                    v-model:page-size="pageSize"
-                    v-model:current-page="currentPage"
-                    @change="handlePageChange"
-                ></Pagination>
+                
             </div>
         </div>
+        <PageDialog
+            ref="dialogComponent"
+            v-model:visible="dialogVisible"
+            v-model="dialogData"
+            v-bind="dialogAttrs"
+            :activeTab="activeTab"
+            @handleClose="handleCloseDialog"
+        ></PageDialog>
     </div>
 </template>
 
 <script setup >
 import { onMounted, ref,watch,reactive,computed, markRaw  } from 'vue';
+import { ElMessage } from 'element-plus';
+
+import { getTextWidth } from "../dom";
+import { isEqual } from '../object'
 
 import Query from '../Query/Query.vue';
 import EaTable from '../Table/Table.vue'
 import Pagination from '../Pagination/Pagination.vue'
 import Text from '../Text/Text.vue'
 import PageTabs from '../PageTabs/PageTabs.vue';
-import { getTextWidth } from "../dom";
-
+import Form from '../Form/Form.vue';
+import PageDialog from './PageDialog.vue';
+import MessageBox from '../MessageBox/MessageBox'
 /**
  * 表格配置参数
  * 
@@ -143,7 +158,7 @@ const props = defineProps({
 });
 
 //emit 方法
-const emit = defineEmits(["query", "reset",'changeTab','getTableData']);
+const emit = defineEmits(["query", "reset",'changeTab','getTableData','selectionChange']);
 
 //loading状态
 let loading = ref(false);
@@ -153,10 +168,10 @@ const handleClickAdd = async () => {
     const res = (await activeTab.value?.getPostData?.()) ?? {};
     const customAttrs = (await activeTab.value?.getPostDrawerAttrs?.()) ?? {};
     const attrs = {
-        title: "新增" + props.title,
+        title: "新增" ,
         is: markRaw(Form),
         componentAttrs: {
-            labelPosition: "top",
+            labelPosition: "left",
         },
         options: activeTab.value?.postOptions ?? [],
         row: {},
@@ -168,7 +183,7 @@ const handleClickAdd = async () => {
         modal: true,
         ...customAttrs,
     };
-    // setDrawer(true, attrs, res);
+    setDrawer(true, attrs, res);
 };
 
 //active Tab相关
@@ -284,6 +299,10 @@ const getTableData = async () => {
 
     
 };
+//表格勾选
+const selectionChange = (val)=>{
+    emit("selectionChange", val);
+}
 
 //表格详情
 const onDetail = async(row) => { 
@@ -303,7 +322,7 @@ const onDetail = async(row) => {
         modal: false,
         ...customAttrs,
     };
-    // setDrawer(true, attrs, res);
+    setDrawer(true, attrs, res);
 };
 //编辑
 const onPut = async (row) => { 
@@ -311,10 +330,10 @@ const onPut = async (row) => {
     const customAttrs = (await activeTab.value?.getPutDrawerAttrs?.(row)) ?? {};
 
     const attrs = {
-        title: "编辑" + props.title,
+        title: "编辑" ,
         is: markRaw(Form),
         componentAttrs: {
-            labelPosition: "top",
+            labelPosition: "left",
         },
         showHeaderButtons: true,
         row,
@@ -333,7 +352,7 @@ const onPut = async (row) => {
             return true;
         }
 
-        const dataIsEqual = isEqual(initDrawerData, drawerData);
+        const dataIsEqual = isEqual(initDrawerData, dialogData);
         if (dataIsEqual) {
             return true;
         }
@@ -347,7 +366,7 @@ const onPut = async (row) => {
         },
         ...customAttrs,
     };
-    // setDrawer(true, attrs, res);
+    setDrawer(true, attrs, res);
 }
 //删除
 const onDelete = async (row) => {
@@ -424,20 +443,20 @@ const handleReset = (init) => {
 
 
 // drawer
-let drawerVisible = ref(false);
-let drawerData = ref({});
-let drawerAttrs = ref({ row: {} });
+let dialogVisible = ref(false);
+let dialogData = ref({});
+let dialogAttrs = ref({ row: {} });
 let initDrawerData = ref({});
 const setDrawer = (visible, attrs,data) => {
-    drawerVisible.value = visible;
-    drawerData.value = JSON.parse(JSON.stringify(data));
+    dialogVisible.value = visible;
+    dialogData.value = JSON.parse(JSON.stringify(data));
     initDrawerData.value = JSON.parse(JSON.stringify(data));
-    drawerAttrs.value = attrs;
+    dialogAttrs.value = attrs;
 
     // activeTableRow = visible ? attrs.row : null;
 };
-const handleCloseDrawer = async (type) => {
-    const canClose = (await drawerAttrs.value.beforeClose?.(type)) ?? true;
+const handleCloseDialog = async (type) => {
+    const canClose = (await dialogAttrs.value.beforeClose?.(type)) ?? true;
     canClose && setDrawer(false, { row: {} }, {});
 };
 
@@ -446,7 +465,7 @@ watch(
     () => {
         initQueryValue.value = JSON.parse(JSON.stringify(activeTab.value?.queryValue ?? {}));
         handleReset(true);
-        handleCloseDrawer("changeTab");
+        handleCloseDialog("changeTab");
         const activeTableButtons = activeTab.value?.tableButtons ?? defaultTableButtons;
         tableButtons.value = activeTableButtons.map((item) =>
             typeof item === "string" ? defaultTableOptionsConfig[item] : item
@@ -467,6 +486,7 @@ const setActiveTab = (target) => {
 const queryComponent= ref(null);
 const tableComponent= ref(null);
 const paginationComponent= ref(null);
+const dialogComponent= ref(null);
 
 defineExpose({
     activeTab: activeTab.value, // 当前激活的tab
@@ -475,7 +495,7 @@ defineExpose({
     tableOptions: tableOptions.value, // 当前表格配置
     tableData: tableData.value, // 当前表格数据
     getTableData,
-
+    setDrawer,
     onDetail, // 默认的点击详情事件，接收行数据
     onPut, // 默认的点击编辑事件，接收行数据
     onDelete, // 默认的点击删除事件，接收行数据
@@ -485,6 +505,7 @@ defineExpose({
     queryComponent, // 搜索组件
     tableComponent, // 表格组件
     paginationComponent, // 分页器
+    dialogComponent,    //dialog
 
     total: total.value, // 当前总数
     currentPage: currentPage.value, // 当前页码
